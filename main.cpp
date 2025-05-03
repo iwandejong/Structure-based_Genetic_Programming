@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include "GP.h"
+#include "GP/GP.h"
 #include <vector>
 #include <sstream>
 #include <chrono>
@@ -21,6 +21,16 @@ Dataset* fetchDataset(std::string datasetName) {
   }
 
   std::ifstream file(datasetName);
+  try {
+    if (!file.is_open()) {
+      std::cerr << "Failed to open dataset: " << datasetName << std::endl;
+      return nullptr;
+    }
+  } catch (const std::exception& e) {
+    std::cerr << "Error opening file: " << e.what() << std::endl;
+    return nullptr;
+  }
+
   std::string line;
 
   std::getline(file, line);

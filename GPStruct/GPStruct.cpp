@@ -1,11 +1,11 @@
-#include "GP.h"
+#include "GPStruct.h"
 
-GP::GP(int populationSize, std::vector<std::vector<double>> dataset, int gen, int depth, std::vector<double> aR, int tournamentSize, std::vector<std::string> colNames, int seed) {
+GPStruct::GPStruct(int populationSize, std::vector<std::vector<double>> dataset, int gen, int depth, std::vector<double> aR, int tournamentSize, std::vector<std::string> colNames, int seed) {
   this->seed = seed;
 
   this->validTerminals.insert(this->validTerminals.end(), colNames.begin(), colNames.end() - 1);
   
-  population = std::vector<GPNode*>(populationSize);
+  population = std::vector<GPNodeStruct*>(populationSize);
 
   // update colnames
   this->colNames = std::vector<std::string>(validTerminals.begin() + 1, validTerminals.end());
@@ -43,20 +43,20 @@ GP::GP(int populationSize, std::vector<std::vector<double>> dataset, int gen, in
   this->tournamentSize = tournamentSize;
 
   for (int i = 0; i < populationSize; i++) {
-    population[i] = new GPNode();
+    population[i] = new GPNodeStruct();
     generateIndividual(population[i], maxDepth);
     // vizTree(population[i]);
   }
 }
 
-GP::~GP() {
+GPStruct::~GPStruct() {
   for (int i = 0; i < populationSize; i++) {
     delete population[i];
   }
 }
 
 // transfer learning
-void GP::transferLearning(std::vector<std::vector<double>> dataset, int gen, std::vector<double> aR, std::vector<std::string> additionalColNames, int topK) {
+void GPStruct::transferLearning(std::vector<std::vector<double>> dataset, int gen, std::vector<double> aR, std::vector<std::string> additionalColNames, int topK) {
   this->validTerminals.insert(this->validTerminals.end(), additionalColNames.begin(), additionalColNames.end());
 
   // update colnames
@@ -89,19 +89,19 @@ void GP::transferLearning(std::vector<std::vector<double>> dataset, int gen, std
   // reproduction rate is the remaining part of the application rate (1 - crossoverRate - mutationRate)
 
   // first get the pairwise fitness of the current population
-  std::vector<std::pair<double, GPNode*>> fitnessPairs;
+  std::vector<std::pair<double, GPNodeStruct*>> fitnessPairs;
   for (int i = 0; i < populationSize; i++) {
     double tF = fitness(*population[i], "test", true);
     fitnessPairs.push_back({tF, population[i]});
   }
 
   // sort the fitness pairs in ascending order
-  std::sort(fitnessPairs.begin(), fitnessPairs.end(), [](const std::pair<double, GPNode*>& a, const std::pair<double, GPNode*>& b) {
+  std::sort(fitnessPairs.begin(), fitnessPairs.end(), [](const std::pair<double, GPNodeStruct*>& a, const std::pair<double, GPNodeStruct*>& b) {
     return a.first < b.first;
   });
 
   // select the top K individuals
-  std::vector<GPNode*> topIndividuals;
+  std::vector<GPNodeStruct*> topIndividuals;
   for (int i = 0; i < topK && i < fitnessPairs.size(); i++) {
     topIndividuals.push_back(fitnessPairs[i].second);
   }
@@ -111,13 +111,13 @@ void GP::transferLearning(std::vector<std::vector<double>> dataset, int gen, std
     if (i < topIndividuals.size()) {
       population[i] = topIndividuals[i];
     } else {
-      population[i] = new GPNode();
+      population[i] = new GPNodeStruct();
       generateIndividual(population[i], maxDepth);
     }
   }
 }
 
-void GP::cachePopulation(int run, bool TL) {
+void GPStruct::cachePopulation(int run, bool TL) {
   this->currPopFitness = std::vector<double>(populationSize);
   double mse_sum = 0.0;
   for (int i = 0; i < populationSize; i++) {
@@ -133,7 +133,7 @@ void GP::cachePopulation(int run, bool TL) {
 }
 
 // initial population
-void GP::generateIndividual(GPNode* root, int maxDepth) {
+void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth) {
   if (maxDepth == 0) {
     root->value = randomTerminal();
     root->isLeaf = true;
@@ -153,7 +153,7 @@ void GP::generateIndividual(GPNode* root, int maxDepth) {
   root->isLeaf = false;
 
   if (isUnary(root->value)) {
-    root->left = new GPNode();
+    root->left = new GPNodeStruct();
     root->right = nullptr;
     float probability = static_cast<double>(maxDepth) / this->maxDepth; // Decreases as tree grows
     bool growLeft = (static_cast<double>(std::rand()) / RAND_MAX) < probability;
@@ -164,8 +164,8 @@ void GP::generateIndividual(GPNode* root, int maxDepth) {
       generateIndividual(root->left, 0);
     }
   } else {
-    root->left = new GPNode();
-    root->right = new GPNode();
+    root->left = new GPNodeStruct();
+    root->right = new GPNodeStruct();
     float probability = static_cast<double>(maxDepth) / this->maxDepth; // Decreases as tree grows
     bool growLeft = (static_cast<double>(std::rand()) / RAND_MAX) < probability;
     bool growRight = (static_cast<double>(std::rand()) / RAND_MAX) < probability;
@@ -185,18 +185,18 @@ void GP::generateIndividual(GPNode* root, int maxDepth) {
   
 }
 
-std::string GP::randomTerminal() {
+std::string GPStruct::randomTerminal() {
   return validTerminals[std::rand() % validTerminals.size()];
 }
 
-std::string GP::randomOperator() {
+std::string GPStruct::randomOperator() {
   if (std::rand() % 2 == 0) {
     return validUnaryOperators[std::rand() % validUnaryOperators.size()];
   }
   return validOperators[std::rand() % validOperators.size()];
 }
 
-bool GP::isUnary(std::string value) {
+bool GPStruct::isUnary(std::string value) {
   for (int i = 0; i < validUnaryOperators.size(); i++) {
     if (validUnaryOperators[i] == value) return true;
   }
@@ -204,9 +204,9 @@ bool GP::isUnary(std::string value) {
 }
 
 // training
-void GP::train(int run, int gen) {
+void GPStruct::train(int run, int gen) {
   // 1: initial parents selection
-  std::vector<GPNode*> parents = tournamentSelection();
+  std::vector<GPNodeStruct*> parents = tournamentSelection();
   double summedFitness = 0.0;
   for (int i = 0; i < maxGenerations; i++) {
     // 2: operators
@@ -241,7 +241,7 @@ void GP::train(int run, int gen) {
   // std::cout << "###########" << std::endl;
 }
 
-double GP::avgDepth() {
+double GPStruct::avgDepth() {
   double sumDepth = 0.0;
   for (int i = 0; i < populationSize; i++) {
     sumDepth += population[i]->calcDepth();
@@ -249,8 +249,8 @@ double GP::avgDepth() {
   return sumDepth / populationSize;
 }
 
-double GP::test(int run, bool TL) {
-  GPNode* tree = bestTree();
+double GPStruct::test(int run, bool TL) {
+  GPNodeStruct* tree = bestTree();
   if (!tree) {
     std::cerr << "No valid tree found!" << std::endl;
     return -1.0;
@@ -265,11 +265,11 @@ double GP::test(int run, bool TL) {
 }
 
 // selection method
-std::vector<GPNode*> GP::tournamentSelection(bool TL) {
-  std::vector<GPNode*> newPopulation(tournamentSize);
+std::vector<GPNodeStruct*> GPStruct::tournamentSelection(bool TL) {
+  std::vector<GPNodeStruct*> newPopulation(tournamentSize);
   
   for (int p = 0; p < 2; p++) {
-    std::vector<GPNode*> tempPopulation(tournamentSize);
+    std::vector<GPNodeStruct*> tempPopulation(tournamentSize);
     int randomIndividual = std::rand() % populationSize; 
     int initialRandom = randomIndividual;
     for (int x = 0; x < tournamentSize; x++) {
@@ -277,7 +277,7 @@ std::vector<GPNode*> GP::tournamentSelection(bool TL) {
       randomIndividual = std::rand() % populationSize;
     }
     
-    GPNode* winner = tempPopulation[0];
+    GPNodeStruct* winner = tempPopulation[0];
     double wF = currPopFitness[initialRandom];
     for (int i = 0; i < tournamentSize; i++) {
       double tF = fitness(*tempPopulation[i], "train");
@@ -295,12 +295,12 @@ std::vector<GPNode*> GP::tournamentSelection(bool TL) {
 }
 
 // genetic operators
-void GP::mutation(const GPNode& tree) {
+void GPStruct::mutation(const GPNodeStruct& tree) {
   // if (static_cast<double>(std::rand()) / RAND_MAX < mutationRate) {
     // std::cout << "Performing Mutation" << std::endl;
     // vizTree(tree);
     int mutationPoint = std::rand() % tree.treeSize();
-    GPNode* temp = tree.traverseToNth(mutationPoint);
+    GPNodeStruct* temp = tree.traverseToNth(mutationPoint);
     delete temp->left;
     delete temp->right;
     generateIndividual(temp, std::rand() % maxDepth);
@@ -311,7 +311,7 @@ void GP::mutation(const GPNode& tree) {
   // }
 }
 
-void GP::crossover(const GPNode& tree1, const GPNode& tree2) {
+void GPStruct::crossover(const GPNodeStruct& tree1, const GPNodeStruct& tree2) {
   // std::cout << "Performing Crossover" << std::endl;
   // std::cout << "################" << std::endl;
   // std::cout << (tree1 == tree2) << std::endl;
@@ -323,13 +323,13 @@ void GP::crossover(const GPNode& tree1, const GPNode& tree2) {
   int t1CP = std::rand() % x;
   int t2CP = std::rand() % y;
   
-  GPNode* temp1 = tree1.traverseToNth(t1CP);
-  GPNode* temp2 = tree2.traverseToNth(t2CP);
+  GPNodeStruct* temp1 = tree1.traverseToNth(t1CP);
+  GPNodeStruct* temp2 = tree2.traverseToNth(t2CP);
   // vizTree(temp1);
   // vizTree(temp2);
 
-  GPNode* tempParent1 = tree1.findParent(temp1);
-  GPNode* tempParent2 = tree2.findParent(temp2);
+  GPNodeStruct* tempParent1 = tree1.findParent(temp1);
+  GPNodeStruct* tempParent2 = tree2.findParent(temp2);
 
   if (!tempParent1 || !tempParent2 || temp1 == temp2) return;
   
@@ -353,9 +353,9 @@ void GP::crossover(const GPNode& tree1, const GPNode& tree2) {
 }
 
 // metrics
-GPNode* GP::bestTree() {
+GPNodeStruct* GPStruct::bestTree() {
   double bestFitness = INFINITY; // * minimize fitness
-  GPNode* currBestTree = nullptr;
+  GPNodeStruct* currBestTree = nullptr;
   for (int i = 0; i < populationSize; i++) {
     double tF = fitness(*population[i], "train");
     if (tF < bestFitness) { // * minimize fitness
@@ -367,7 +367,7 @@ GPNode* GP::bestTree() {
   return currBestTree;
 }
 
-double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
+double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool recal) {
   double SE = 0.0;
 
   std::vector<std::vector<double>> dataset;
@@ -405,7 +405,7 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
   return SE; // * minimize fitness
 }
 
-double GP::populationFitness() {
+double GPStruct::populationFitness() {
   double totalFitness = 0.0;  
   for (int j = 0; j < populationSize; j++) {
     totalFitness += fitness(*population[j], "train");
@@ -414,11 +414,11 @@ double GP::populationFitness() {
 }
 
 // misc
-GPNode* GP::getIndividual(const int& index) {
+GPNodeStruct* GPStruct::getIndividual(const int& index) {
   return population[index];
 }
 
-int GP::getIndex(const GPNode& tree) {
+int GPStruct::getIndex(const GPNodeStruct& tree) {
   for (int i = 0; i < populationSize; i++) {
     if (population[i] == &tree) {
       return i;
@@ -427,24 +427,24 @@ int GP::getIndex(const GPNode& tree) {
   return -1;
 }
 
-void GP::updateFitness(const GPNode& tree) {
+void GPStruct::updateFitness(const GPNodeStruct& tree) {
   int index = getIndex(tree);
   if (index != -1) {
     currPopFitness[index] = fitness(tree, "train", true); // recalculate fitness
   }
 }
 
-void GP::updateColNames(const std::vector<std::string>& colNames) {
+void GPStruct::updateColNames(const std::vector<std::string>& colNames) {
   this->colNames = colNames;
 }
 
-void GP::vizTree(GPNode* tree) {
+void GPStruct::vizTree(GPNodeStruct* tree) {
   // std::cout << "Has X: " << (tree->hasX() ? "Yes" : "No") << std::endl;
   std::cout << "f(x)=" << tree->formula() << std::endl;
   tree->print();
 }
 
-void GP::appendToCSV(std::vector<std::string> input) {
+void GPStruct::appendToCSV(std::vector<std::string> input) {
   std::ofstream file("outputs.csv", std::ios::app);
   
   if (!file.is_open()) {
@@ -463,7 +463,7 @@ void GP::appendToCSV(std::vector<std::string> input) {
   file.close();
 }
 
-void GP::diversityCalc(std::vector<std::string> input) {
+void GPStruct::diversityCalc(std::vector<std::string> input) {
   std::ofstream file("diversity.csv", std::ios::app);
   
   if (!file.is_open()) {

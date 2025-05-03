@@ -1,5 +1,5 @@
-#ifndef GP_NODE_H
-#define GP_NODE_H
+#ifndef GP_NODE_STRUCT_H
+#define GP_NODE_STRUCT_H
 
 #include <string>
 #include <iostream>
@@ -8,22 +8,22 @@
 #include <stdexcept>
 #include <algorithm>
 
-class GPNode {
+class GPNodeStruct {
   public:
     std::string value;
     bool isLeaf = false;
-    GPNode* left;
-    GPNode* right;
-    GPNode() {};
-    ~GPNode();
-    GPNode(const GPNode& other);
+    GPNodeStruct* left;
+    GPNodeStruct* right;
+    GPNodeStruct() {};
+    ~GPNodeStruct();
+    GPNodeStruct(const GPNodeStruct& other);
     
     double fitness(const std::vector<double>& inputs, const std::vector<std::string>& colNames) const;
     
-    GPNode* traverseToNth(int& n) const;
-    GPNode* findParent(int& n) const;
-    GPNode* findParent(GPNode* child) const;
-    GPNode* findParentHelper(int& n, GPNode* parent) const;
+    GPNodeStruct* traverseToNth(int& n) const;
+    GPNodeStruct* findParent(int& n) const;
+    GPNodeStruct* findParent(GPNodeStruct* child) const;
+    GPNodeStruct* findParentHelper(int& n, GPNodeStruct* parent) const;
     int treeSize() const;
     int calcDepth() const;
     double protectedDiv(const double& a, const double& b) const;
@@ -32,4 +32,4 @@ class GPNode {
     std::string formula();
 };
 
-#endif // GP_NODE_H
+#endif // GP_NODE_STRUCT_H

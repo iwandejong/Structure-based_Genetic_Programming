@@ -1,6 +1,6 @@
-#include "GPNode.h"
+#include "GPNodeStruct.h"
 
-GPNode::~GPNode() {
+GPNodeStruct::~GPNodeStruct() {
   if (left != nullptr) {
     delete left;
     left = nullptr;
@@ -12,14 +12,14 @@ GPNode::~GPNode() {
   }
 }
 
-GPNode::GPNode(const GPNode& other) {
+GPNodeStruct::GPNodeStruct(const GPNodeStruct& other) {
   value = other.value;
   isLeaf = other.isLeaf;
-  left = (other.left != nullptr) ? new GPNode(*other.left) : nullptr;
-  right = (other.right != nullptr) ? new GPNode(*other.right) : nullptr;
+  left = (other.left != nullptr) ? new GPNodeStruct(*other.left) : nullptr;
+  right = (other.right != nullptr) ? new GPNodeStruct(*other.right) : nullptr;
 }
 
-void GPNode::print(const std::string& prefix, bool isLeft) {
+void GPNodeStruct::print(const std::string& prefix, bool isLeft) {
   if (right != NULL) {
     right->print(prefix + (isLeft ? "│   " : "    "), false);
   }
@@ -31,7 +31,7 @@ void GPNode::print(const std::string& prefix, bool isLeft) {
   }
 }
 
-std::string GPNode::formula() {
+std::string GPNodeStruct::formula() {
   if (!left && !right) {
       return value; // Return value if it's a leaf node
   }
@@ -42,7 +42,7 @@ std::string GPNode::formula() {
   return "(" + leftFormula + " " + value + " " + rightFormula + ")";
 }
 
-double GPNode::fitness(const std::vector<double>& inputs, const std::vector<std::string>& colNames) const {
+double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vector<std::string>& colNames) const {
   if (isLeaf) {
     try {
       return std::stod(value);
@@ -98,44 +98,44 @@ double GPNode::fitness(const std::vector<double>& inputs, const std::vector<std:
 }
 
 // DFS
-GPNode* GPNode::traverseToNth(int& n) const {
+GPNodeStruct* GPNodeStruct::traverseToNth(int& n) const {
   if (n == 0) {
-    return const_cast<GPNode*>(this);
+    return const_cast<GPNodeStruct*>(this);
   }
   n--;
 
   if (left) {
-    GPNode* leftResult = left->traverseToNth(n);
+    GPNodeStruct* leftResult = left->traverseToNth(n);
     if (leftResult) return leftResult;
   }
 
   if (right) {
-    GPNode* rightResult = right->traverseToNth(n);
+    GPNodeStruct* rightResult = right->traverseToNth(n);
     if (rightResult) return rightResult;
   }
 
   return nullptr;
 }
 
-GPNode* GPNode::findParent(int& n) const {
+GPNodeStruct* GPNodeStruct::findParent(int& n) const {
   if (n == 0) {
     return nullptr; // No parent for the root node
   }
   n--;
 
-  GPNode* parent = findParentHelper(n, nullptr);
+  GPNodeStruct* parent = findParentHelper(n, nullptr);
   return parent;
 }
 
-GPNode* GPNode::findParent(GPNode* child) const {
+GPNodeStruct* GPNodeStruct::findParent(GPNodeStruct* child) const {
   if (child == nullptr) {
     return nullptr; // No parent for null child
   }
 
   if (left == child || right == child) {
-    return const_cast<GPNode*>(this); // Return this node as the parent
+    return const_cast<GPNodeStruct*>(this); // Return this node as the parent
   }
-  GPNode* parent = nullptr;
+  GPNodeStruct* parent = nullptr;
   if (left) {
     parent = left->findParent(child);
     if (parent) return parent;
@@ -147,32 +147,32 @@ GPNode* GPNode::findParent(GPNode* child) const {
   return nullptr; // No parent found
 }
 
-GPNode* GPNode::findParentHelper(int& n, GPNode* parent) const {
+GPNodeStruct* GPNodeStruct::findParentHelper(int& n, GPNodeStruct* parent) const {
   if (n == 0) {
     return parent;
   }
   n--;
 
   if (left) {
-    GPNode* leftResult = left->findParentHelper(n, const_cast<GPNode*>(this));
+    GPNodeStruct* leftResult = left->findParentHelper(n, const_cast<GPNodeStruct*>(this));
     if (leftResult) return leftResult;
   }
 
   if (right) {
-    GPNode* rightResult = right->findParentHelper(n, const_cast<GPNode*>(this));
+    GPNodeStruct* rightResult = right->findParentHelper(n, const_cast<GPNodeStruct*>(this));
     if (rightResult) return rightResult;
   }
 
   return nullptr;
 }
 
-int GPNode::treeSize() const {
+int GPNodeStruct::treeSize() const {
   if (left) return 1 + left->treeSize();
   if (right) return 1 + right->treeSize();
   return 1;
 }
 
-int GPNode::calcDepth() const {
+int GPNodeStruct::calcDepth() const {
   if (isLeaf) {
       return 0;
   }
@@ -183,6 +183,6 @@ int GPNode::calcDepth() const {
   return 1 + std::max(leftDepth, rightDepth);
 }
 
-double GPNode::protectedDiv(const double& a, const double& b) const {
+double GPNodeStruct::protectedDiv(const double& a, const double& b) const {
   return (std::abs(b) < 1e-6) ? a : a / b;
 }
