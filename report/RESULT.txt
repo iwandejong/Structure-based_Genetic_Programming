@@ -1,0 +1,46 @@
+Best Tree Formula
+(((0.177638 cos ) + ((pflt * exec) + (freemem - freemem))) - ((ppgin / rchar) min ((rchar sin ) cos )))
+Testing Results
+MSE: 0.055719
+Run 10/10 completed in 30.9549 seconds (15.3742 seconds for TL)
+___________________
+Results:
+Run     Best MSE        Best TL MSE     MSE Diff        Duration        TL Duration
+1       0.0682627       0.0824517       -0.014189       31.051s 15.4682s
+2       0.0813524       0.0732875       0.00806485      29.0517s        14.6588s
+3       0.0399926       0.0954614       -0.0554688      29.9623s        14.9685s
+4       0.0761767       0.0968821       -0.0207054      29.5693s        14.6608s
+5       0.0563168       0.0708776       -0.0145608      30.046s 15.0033s
+6       0.0650966       0.0574573       0.00763924      30.4959s        14.9132s
+7       0.0738169       0.106547        -0.0327305      30.353s 15.0312s
+8       0.050575        0.0755511       -0.0249761      30.3156s        14.7166s
+9       0.109461        0.0727589       0.0367016       30.5905s        15.1081s
+10      0.119429        0.0557191       0.0637098       30.9549s        15.3742s
+___________________
+Average Best MSE: 0.0740479
+Average Best TL MSE: 0.0786994
+Average Fitness Improvement: -0.0046515
+Average Duration: 30.239 seconds (Total duration: 302.39 seconds)
+Average TL Duration: 14.9903 seconds (Total TL duration: 149.903 seconds)
+
+SE: 0.056847
+Run 10/10 completed in 29.2607 seconds (14.7179 seconds for TL)
+___________________
+Results:
+Run     Best MSE        Best TL MSE     MSE Diff        Duration        TL Duration
+1       0.13137 0.150605        -0.0192347      31.0011s        15.13s
+2       0.124413        0.134931        -0.0105182      29.765s 15.3273s
+3       0.13699 0.0675402       0.0694501       29.1992s        14.4372s
+4       0.170896        0.0761857       0.0947103       29.1754s        14.9688s
+5       0.141094        0.0836371       0.0574566       29.8399s        14.8279s
+6       0.181887        0.117251        0.0646359       30.5413s        15.0595s
+7       0.135552        0.178067        -0.0425154      31.0098s        15.3857s
+8       0.152464        0.0431409       0.109324        31.2328s        15.2722s
+9       0.211088        0.0606431       0.150445        30.5358s        14.8841s
+10      0.194886        0.0568471       0.138039        29.2607s        14.7179s
+___________________
+Average Best MSE: 0.158064
+Average Best TL MSE: 0.0968849
+Average Fitness Improvement: 0.0611792
+Average Duration: 30.1561 seconds (Total duration: 301.561 seconds)
+Average TL Duration: 15.0011 seconds (Total TL duration: 150.011 seconds)
