@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include "GP/GP.h"
+#include "GP.h"
 #include <vector>
 #include <sstream>
 #include <chrono>
@@ -84,6 +84,11 @@ Dataset* fetchDataset(std::string datasetName) {
 int main() {
   Dataset* dataset = fetchDataset("227_cpu_small_cleaned.tsv");
   Dataset* datasetTL = fetchDataset("197_cpu_act_cleaned.tsv");
+
+  if (!dataset || !datasetTL) {
+    std::cerr << "Failed to load datasets" << std::endl;
+    return 1;
+  }
 
   std::ofstream file("outputs.csv", std::ios::trunc);
   if (!file.is_open()) {
