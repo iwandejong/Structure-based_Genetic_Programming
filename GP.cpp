@@ -55,68 +55,6 @@ GP::~GP() {
   }
 }
 
-// transfer learning
-void GP::transferLearning(std::vector<std::vector<double>> dataset, int gen, std::vector<double> aR, std::vector<std::string> additionalColNames, int topK) {
-  this->validTerminals.insert(this->validTerminals.end(), additionalColNames.begin(), additionalColNames.end());
-
-  // update colnames
-  this->colNames = std::vector<std::string>(validTerminals.begin() + 1, validTerminals.end());
-
-  double trainSplit = 0.8;
-  int numSamples = dataset.size();
-  int trainSize = static_cast<int>(numSamples * trainSplit);
-
-  std::vector<int> indices(numSamples);
-  for (int i = 0; i < numSamples; ++i) {
-    indices[i] = i;
-  }
-  std::shuffle(indices.begin(), indices.end(), std::default_random_engine(seed));
-
-  this->training = std::vector<std::vector<double>>(trainSize);
-  this->testing = std::vector<std::vector<double>>(numSamples - trainSize);
-
-  for (int i = 0; i < trainSize; ++i) {
-    this->training[i] = dataset[indices[i]];
-  }
-
-  for (int i = 0; i < numSamples - trainSize; ++i) {
-    this->testing[i] = dataset[indices[i + trainSize]];
-  }
-
-  this->maxGenerations = gen;
-  this->crossoverRate = aR[0];
-  this->mutationRate = aR[1];
-  // reproduction rate is the remaining part of the application rate (1 - crossoverRate - mutationRate)
-
-  // first get the pairwise fitness of the current population
-  std::vector<std::pair<double, GPNode*>> fitnessPairs;
-  for (int i = 0; i < populationSize; i++) {
-    double tF = fitness(*population[i], "test", true);
-    fitnessPairs.push_back({tF, population[i]});
-  }
-
-  // sort the fitness pairs in ascending order
-  std::sort(fitnessPairs.begin(), fitnessPairs.end(), [](const std::pair<double, GPNode*>& a, const std::pair<double, GPNode*>& b) {
-    return a.first < b.first;
-  });
-
-  // select the top K individuals
-  std::vector<GPNode*> topIndividuals;
-  for (int i = 0; i < topK && i < fitnessPairs.size(); i++) {
-    topIndividuals.push_back(fitnessPairs[i].second);
-  }
-
-  // replace the current population with the top K individuals
-  for (int i = 0; i < populationSize; i++) {
-    if (i < topIndividuals.size()) {
-      population[i] = topIndividuals[i];
-    } else {
-      population[i] = new GPNode();
-      generateIndividual(population[i], maxDepth);
-    }
-  }
-}
-
 void GP::cachePopulation(int run, bool TL) {
   this->currPopFitness = std::vector<double>(populationSize);
   double mse_sum = 0.0;
@@ -126,7 +64,6 @@ void GP::cachePopulation(int run, bool TL) {
     double tFtest = 0.0;
     currPopFitness[i] = tF;
     std::cout << "\033[90m" "Caching Individual " << i+1 << "/" << populationSize << " [MSE: " << std::to_string(tF) << "]" << std::endl << "\033[0m";
-    diversityCalc({std::to_string(run),std::to_string(tF),std::to_string(TL ? 1 : 0)});
     mse_sum += tF;
   }
   std::cout << "\033[31m" << "Initial Generation Complete [Average MSE: " << std::to_string(mse_sum/populationSize) << "]" << std::endl << "\033[0m";
@@ -459,10 +396,6 @@ void GP::updateFitness(const GPNode& tree) {
   }
 }
 
-void GP::updateColNames(const std::vector<std::string>& colNames) {
-  this->colNames = colNames;
-}
-
 void GP::vizTree(GPNode* tree) {
   // std::cout << "Has X: " << (tree->hasX() ? "Yes" : "No") << std::endl;
   std::cout << "f(x)=" << tree->formula() << std::endl;
@@ -471,25 +404,6 @@ void GP::vizTree(GPNode* tree) {
 
 void GP::appendToCSV(std::vector<std::string> input) {
   std::ofstream file("outputs.csv", std::ios::app);
-  
-  if (!file.is_open()) {
-    std::cerr << "Failed to open outputs.csv" << std::endl;
-    return;
-  }
-
-  for (const auto& value : input) {
-    file << value;
-    if (&value != &input.back()) {
-      file << ",";
-    }
-  }
-  file << std::endl;
-  
-  file.close();
-}
-
-void GP::diversityCalc(std::vector<std::string> input) {
-  std::ofstream file("diversity.csv", std::ios::app);
   
   if (!file.is_open()) {
     std::cerr << "Failed to open outputs.csv" << std::endl;

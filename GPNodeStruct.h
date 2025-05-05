@@ -12,10 +12,9 @@ class GPNodeStruct {
   public:
     std::string value;
     bool isLeaf = false;
-    GPNodeStruct* left;
-    GPNodeStruct* right;
+    std::vector<GPNodeStruct*> children = {};
     GPNodeStruct() {};
-    ~GPNodeStruct();
+    ~GPNodeStruct() {};
     GPNodeStruct(const GPNodeStruct& other);
     
     double fitness(const std::vector<double>& inputs, const std::vector<std::string>& colNames) const;
@@ -28,7 +27,6 @@ class GPNodeStruct {
     int calcDepth() const;
     double protectedDiv(const double& a, const double& b) const;
 
-    void print(const std::string& prefix = "", bool isLeft = true);
     std::string formula();
 };
 

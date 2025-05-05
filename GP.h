@@ -48,9 +48,6 @@ class GP {
     void train(int run = 0, int gen = 0);
     double test(int run = 0, bool TL = false);
     double avgDepth();
-
-    // transfer learning
-    void transferLearning(std::vector<std::vector<double>> dataset, int gen, std::vector<double> aR, std::vector<std::string> additionalColNames, int topK);
     
     // selection method
     std::vector<GPNode*> tournamentSelection(bool TL = false);
@@ -68,10 +65,8 @@ class GP {
     GPNode* getIndividual(const int& index);
     int getIndex(const GPNode& tree);
     void updateFitness(const GPNode& tree);
-    void updateColNames(const std::vector<std::string>& colNames);
     void vizTree(GPNode* tree);
     void appendToCSV(std::vector<std::string> input);
-    void diversityCalc(std::vector<std::string> input);
     bool isUnary(std::string value);
 };
 

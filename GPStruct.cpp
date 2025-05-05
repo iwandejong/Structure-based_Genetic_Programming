@@ -1,14 +1,25 @@
 #include "GPStruct.h"
 
-GPStruct::GPStruct(int populationSize, std::vector<std::vector<double>> dataset, int gen, int depth, std::vector<double> aR, int tournamentSize, std::vector<std::string> colNames, int seed) {
+GPStruct::GPStruct(int populationSize, std::vector<std::vector<double>> dataset, int gen, int depth, std::vector<double> aR, int tournamentSize, std::vector<std::pair<std::string, int>> columnTypes, int seed) {
   this->seed = seed;
 
-  this->validTerminals.insert(this->validTerminals.end(), colNames.begin(), colNames.end() - 1);
+  this->validFloatTerminals = std::vector<std::string>(columnTypes.size());
+  this->validBooleanTerminals = std::vector<std::string>(columnTypes.size());
+  for (int i = 0; i < columnTypes.size(); i++) {
+    if (columnTypes[i].second == 0) {
+      this->validBooleanTerminals.push_back(columnTypes[i].first);
+    } else {
+      this->validFloatTerminals.push_back(columnTypes[i].first);
+    }
+  }
   
   population = std::vector<GPNodeStruct*>(populationSize);
 
   // update colnames
-  this->colNames = std::vector<std::string>(validTerminals.begin() + 1, validTerminals.end());
+  this->colNames = std::vector<std::string>(columnTypes.size());
+  for (int i = 0; i < columnTypes.size(); i++) {
+    this->colNames[i] = columnTypes[i].first;
+  }
 
   double trainSplit = 0.8;
   // double validationSplit = 0.1;
@@ -55,68 +66,6 @@ GPStruct::~GPStruct() {
   }
 }
 
-// transfer learning
-void GPStruct::transferLearning(std::vector<std::vector<double>> dataset, int gen, std::vector<double> aR, std::vector<std::string> additionalColNames, int topK) {
-  this->validTerminals.insert(this->validTerminals.end(), additionalColNames.begin(), additionalColNames.end());
-
-  // update colnames
-  this->colNames = std::vector<std::string>(validTerminals.begin() + 1, validTerminals.end());
-
-  double trainSplit = 0.8;
-  int numSamples = dataset.size();
-  int trainSize = static_cast<int>(numSamples * trainSplit);
-
-  std::vector<int> indices(numSamples);
-  for (int i = 0; i < numSamples; ++i) {
-    indices[i] = i;
-  }
-  std::shuffle(indices.begin(), indices.end(), std::default_random_engine(seed));
-
-  this->training = std::vector<std::vector<double>>(trainSize);
-  this->testing = std::vector<std::vector<double>>(numSamples - trainSize);
-
-  for (int i = 0; i < trainSize; ++i) {
-    this->training[i] = dataset[indices[i]];
-  }
-
-  for (int i = 0; i < numSamples - trainSize; ++i) {
-    this->testing[i] = dataset[indices[i + trainSize]];
-  }
-
-  this->maxGenerations = gen;
-  this->crossoverRate = aR[0];
-  this->mutationRate = aR[1];
-  // reproduction rate is the remaining part of the application rate (1 - crossoverRate - mutationRate)
-
-  // first get the pairwise fitness of the current population
-  std::vector<std::pair<double, GPNodeStruct*>> fitnessPairs;
-  for (int i = 0; i < populationSize; i++) {
-    double tF = fitness(*population[i], "test", true);
-    fitnessPairs.push_back({tF, population[i]});
-  }
-
-  // sort the fitness pairs in ascending order
-  std::sort(fitnessPairs.begin(), fitnessPairs.end(), [](const std::pair<double, GPNodeStruct*>& a, const std::pair<double, GPNodeStruct*>& b) {
-    return a.first < b.first;
-  });
-
-  // select the top K individuals
-  std::vector<GPNodeStruct*> topIndividuals;
-  for (int i = 0; i < topK && i < fitnessPairs.size(); i++) {
-    topIndividuals.push_back(fitnessPairs[i].second);
-  }
-
-  // replace the current population with the top K individuals
-  for (int i = 0; i < populationSize; i++) {
-    if (i < topIndividuals.size()) {
-      population[i] = topIndividuals[i];
-    } else {
-      population[i] = new GPNodeStruct();
-      generateIndividual(population[i], maxDepth);
-    }
-  }
-}
-
 void GPStruct::cachePopulation(int run, bool TL) {
   this->currPopFitness = std::vector<double>(populationSize);
   double mse_sum = 0.0;
@@ -126,16 +75,15 @@ void GPStruct::cachePopulation(int run, bool TL) {
     double tFtest = 0.0;
     currPopFitness[i] = tF;
     std::cout << "\033[90m" "Caching Individual " << i+1 << "/" << populationSize << " [MSE: " << std::to_string(tF) << "]" << std::endl << "\033[0m";
-    diversityCalc({std::to_string(run),std::to_string(tF),std::to_string(TL ? 1 : 0)});
     mse_sum += tF;
   }
   std::cout << "\033[31m" << "Initial Generation Complete [Average MSE: " << std::to_string(mse_sum/populationSize) << "]" << std::endl << "\033[0m";
 }
 
 // initial population
-void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth) {
+void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth, std::string parentType) {
   if (maxDepth == 0) {
-    root->value = randomTerminal();
+    root->value = randomTerminal(parentType);
     root->isLeaf = true;
     root->left = nullptr;
     root->right = nullptr;
@@ -185,15 +133,27 @@ void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth) {
   
 }
 
-std::string GPStruct::randomTerminal() {
-  return validTerminals[std::rand() % validTerminals.size()];
+std::string GPStruct::randomTerminal(std::string parentType) {
+  if (parentType == "double") {
+    return validFloatTerminals[std::rand() % validFloatTerminals.size()];
+  } else if (parentType == "boolean") {
+    return validBooleanTerminals[std::rand() % validBooleanTerminals.size()];
+  } else {
+    return validFloatTerminals[std::rand() % validFloatTerminals.size()];
+  }
 }
 
 std::string GPStruct::randomOperator() {
-  if (std::rand() % 2 == 0) {
-    return validUnaryOperators[std::rand() % validUnaryOperators.size()];
+  int randomIndex = std::rand() % (validOperators.size() + validUnaryOperators.size() + validConditionalOperators.size() + validComparisonOperators.size());
+  if (randomIndex < validOperators.size()) {
+    return validOperators[randomIndex];
+  } else if (randomIndex < validOperators.size() + validUnaryOperators.size()) {
+    return validUnaryOperators[randomIndex - validOperators.size()];
+  } else if (randomIndex < validOperators.size() + validUnaryOperators.size() + validConditionalOperators.size()) {
+    return validConditionalOperators[randomIndex - validOperators.size() - validUnaryOperators.size()];
+  } else {
+    return validComparisonOperators[randomIndex - validOperators.size() - validUnaryOperators.size() - validConditionalOperators.size()];
   }
-  return validOperators[std::rand() % validOperators.size()];
 }
 
 bool GPStruct::isUnary(std::string value) {
@@ -461,10 +421,6 @@ void GPStruct::updateFitness(const GPNodeStruct& tree) {
   }
 }
 
-void GPStruct::updateColNames(const std::vector<std::string>& colNames) {
-  this->colNames = colNames;
-}
-
 void GPStruct::vizTree(GPNodeStruct* tree) {
   // std::cout << "Has X: " << (tree->hasX() ? "Yes" : "No") << std::endl;
   std::cout << "f(x)=" << tree->formula() << std::endl;
@@ -473,25 +429,6 @@ void GPStruct::vizTree(GPNodeStruct* tree) {
 
 void GPStruct::appendToCSV(std::vector<std::string> input) {
   std::ofstream file("outputs.csv", std::ios::app);
-  
-  if (!file.is_open()) {
-    std::cerr << "Failed to open outputs.csv" << std::endl;
-    return;
-  }
-
-  for (const auto& value : input) {
-    file << value;
-    if (&value != &input.back()) {
-      file << ",";
-    }
-  }
-  file << std::endl;
-  
-  file.close();
-}
-
-void GPStruct::diversityCalc(std::vector<std::string> input) {
-  std::ofstream file("diversity.csv", std::ios::app);
   
   if (!file.is_open()) {
     std::cerr << "Failed to open outputs.csv" << std::endl;

@@ -1,45 +1,35 @@
 #include "GPNodeStruct.h"
 
-GPNodeStruct::~GPNodeStruct() {
-  if (left != nullptr) {
-    delete left;
-    left = nullptr;
-  }
-
-  if (right != nullptr) {
-    delete right;
-    right = nullptr;
-  }
-}
-
 GPNodeStruct::GPNodeStruct(const GPNodeStruct& other) {
   value = other.value;
   isLeaf = other.isLeaf;
-  left = (other.left != nullptr) ? new GPNodeStruct(*other.left) : nullptr;
-  right = (other.right != nullptr) ? new GPNodeStruct(*other.right) : nullptr;
-}
-
-void GPNodeStruct::print(const std::string& prefix, bool isLeft) {
-  if (right != NULL) {
-    right->print(prefix + (isLeft ? "│   " : "    "), false);
-  }
-
-  std::cout << prefix + (isLeft ? "└── " : "┌── ") + value << std::endl;
-
-  if (left != NULL) {
-    left->print(prefix + (isLeft ? "    " : "│   "), true);
+  for (const auto& child : other.children) {
+    children.push_back(new GPNodeStruct(*child));
   }
 }
 
 std::string GPNodeStruct::formula() {
-  if (!left && !right) {
-      return value; // Return value if it's a leaf node
+  // if (!left && !right) {
+  //     return value; // Return value if it's a leaf node
+  // }
+  if (children.empty()) {
+    return value; // Return value if it's a leaf node
   }
 
-  std::string leftFormula = (left) ? left->formula() : "";
-  std::string rightFormula = (right) ? right->formula() : "";
+  // std::string leftFormula = (left) ? left->formula() : "";
+  // std::string rightFormula = (right) ? right->formula() : "";
 
-  return "(" + leftFormula + " " + value + " " + rightFormula + ")";
+  // return "(" + leftFormula + " " + value + " " + rightFormula + ")";
+
+  std::string result = "(";
+  for (size_t i = 0; i < children.size(); ++i) {
+    result += children[i]->formula();
+    if (i < children.size() - 1) {
+      result += " " + value + " ";
+    }
+  }
+  result += ")";
+  return result;
 }
 
 double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vector<std::string>& colNames) const {
@@ -56,45 +46,68 @@ double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vecto
     return INFINITY; // can't be calculated, therefore a bad fitness
   }
   
-  double leftValue = left->fitness(inputs, colNames);
-  if (right) {
-    double rightValue = right->fitness(inputs, colNames);
+  // double leftValue = left->fitness(inputs, colNames);
+  // if (right) {
+  //   double rightValue = right->fitness(inputs, colNames);
     
-    if (value == "+") {
-      // return leftValue + rightValue;
-      return std::max(-1.0, std::min(1.0, leftValue + rightValue));
-    } else if (value == "-") {
-      // return leftValue - rightValue;
-      return std::max(-1.0, std::min(1.0, leftValue - rightValue));
-    } else if (value == "*") {
-      // return leftValue * rightValue;
-      return std::max(-1.0, std::min(1.0, leftValue * rightValue));
-    }else if (value == "/") {
-      // return protectedDiv(leftValue, rightValue);
-      return std::max(-1.0, std::min(1.0, protectedDiv(leftValue, rightValue)));
-    } else if (value == "max") {
-      return std::max(leftValue, rightValue);
-    } else if (value == "min") {
-      return std::min(leftValue, rightValue);
-    }
-    return INFINITY; // can't be calculated, therefore a bad fitness
-  } else {
-    if (value == "exp") {
-      return std::max(-1.0, std::min(1.0, exp(leftValue)));
-    } else if (value == "sin") {
-      return sin(leftValue);
-    } else if (value == "cos") {
-      return cos(leftValue);
-    } else if (value == "log") {
-      if (leftValue <= -1.0) {
-        return -1.0; // log(<=-1.0) is undefined since -1.0+1.0=0.0, return a large negative value
+  //   if (value == "+") {
+  //     // return leftValue + rightValue;
+  //     return std::max(-1.0, std::min(1.0, leftValue + rightValue));
+  //   } else if (value == "-") {
+  //     // return leftValue - rightValue;
+  //     return std::max(-1.0, std::min(1.0, leftValue - rightValue));
+  //   } else if (value == "*") {
+  //     // return leftValue * rightValue;
+  //     return std::max(-1.0, std::min(1.0, leftValue * rightValue));
+  //   }else if (value == "/") {
+  //     // return protectedDiv(leftValue, rightValue);
+  //     return std::max(-1.0, std::min(1.0, protectedDiv(leftValue, rightValue)));
+  //   } else if (value == "max") {
+  //     return std::max(leftValue, rightValue);
+  //   } else if (value == "min") {
+  //     return std::min(leftValue, rightValue);
+  //   }
+  //   return INFINITY; // can't be calculated, therefore a bad fitness
+  // } else {
+  //   if (value == "exp") {
+  //     return std::max(-1.0, std::min(1.0, exp(leftValue)));
+  //   } else if (value == "sin") {
+  //     return sin(leftValue);
+  //   } else if (value == "cos") {
+  //     return cos(leftValue);
+  //   } else if (value == "log") {
+  //     if (leftValue <= -1.0) {
+  //       return -1.0; // log(<=-1.0) is undefined since -1.0+1.0=0.0, return a large negative value
+  //     }
+  //     return 0.5 * log(leftValue + 1.0) + 0.5;
+  //   } else if (value == "sigmoid") {
+  //     return 1.0 / (1.0 + exp(-leftValue));
+  //   }
+  //   return INFINITY; // can't be calculated, therefore a bad fitness
+  // }
+
+  double result = 0.0;
+  for (size_t i = 0; i < children.size(); ++i) {
+    double childValue = children[i]->fitness(inputs, colNames);
+    if (i == 0) {
+      result = childValue;
+    } else {
+      if (value == "+") {
+        result += childValue;
+      } else if (value == "-") {
+        result -= childValue;
+      } else if (value == "*") {
+        result *= childValue;
+      } else if (value == "/") {
+        result = protectedDiv(result, childValue);
+      } else if (value == "max") {
+        result = std::max(result, childValue);
+      } else if (value == "min") {
+        result = std::min(result, childValue);
       }
-      return 0.5 * log(leftValue + 1.0) + 0.5;
-    } else if (value == "sigmoid") {
-      return 1.0 / (1.0 + exp(-leftValue));
     }
-    return INFINITY; // can't be calculated, therefore a bad fitness
   }
+  return result;
 }
 
 // DFS

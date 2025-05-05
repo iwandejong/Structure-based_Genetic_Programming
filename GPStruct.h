@@ -26,21 +26,34 @@ class GPStruct {
     std::vector<std::vector<double>> testing;
     std::vector<std::vector<double>> validation;
     
-    std::vector<std::string> validTerminals = {"double"};
+    // add valid float terminals
+    std::vector<std::string> validFloatTerminals = {"double"};
+    // add valid boolean terminals
+    std::vector<std::string> validBooleanTerminals;
+
     const std::vector<std::string> validOperators = {"+", "*", "-", "/", "max", "min"};
     const std::vector<std::string> validUnaryOperators = {"sigmoid", "sin", "cos", "log"};
+    // for structure-based GP, we add conditional operators
+    const std::vector<std::string> validConditionalOperators = {"if", "ifelse", "and", "or", "not"};
+    // params:
+    // if: if(condition, trueBranch, falseBranch)
+    // ifelse: ifelse(condition, trueBranch, falseBranch)
+    // and: and(condition1, condition2)
+    // or: or(condition1, condition2)
+    // not: not(condition)
+    const std::vector<std::string> validComparisonOperators = {"<", ">", "<=", ">=", "==", "!="};
 
     std::vector<std::string> colNames;
 
     std::vector<double> currPopFitness;
     
   public:
-    GPStruct(int populationSize, std::vector<std::vector<double>> dataset, int gen, int depth, std::vector<double> aR, int tournamentSize, std::vector<std::string> colNamesm, int seed);
+    GPStruct(int populationSize, std::vector<std::vector<double>> dataset, int gen, int depth, std::vector<double> aR, int tournamentSize, std::vector<std::pair<std::string, int>> columnTypes, int seed = 0);
     ~GPStruct();
 
     // initial population
-    void generateIndividual(GPNodeStruct* root, int maxDepth);
-    std::string randomTerminal();
+    void generateIndividual(GPNodeStruct* root, int maxDepth, std::string parentType);
+    std::string randomTerminal(std::string parentType);
     std::string randomOperator();
     void cachePopulation(int run, bool TL = false);
 
@@ -48,9 +61,6 @@ class GPStruct {
     void train(int run = 0, int gen = 0);
     double test(int run = 0, bool TL = false);
     double avgDepth();
-
-    // transfer learning
-    void transferLearning(std::vector<std::vector<double>> dataset, int gen, std::vector<double> aR, std::vector<std::string> additionalColNames, int topK);
     
     // selection method
     std::vector<GPNodeStruct*> tournamentSelection(bool TL = false);
@@ -68,10 +78,8 @@ class GPStruct {
     GPNodeStruct* getIndividual(const int& index);
     int getIndex(const GPNodeStruct& tree);
     void updateFitness(const GPNodeStruct& tree);
-    void updateColNames(const std::vector<std::string>& colNames);
     void vizTree(GPNodeStruct* tree);
     void appendToCSV(std::vector<std::string> input);
-    void diversityCalc(std::vector<std::string> input);
     bool isUnary(std::string value);
 };
 

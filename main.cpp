@@ -2,7 +2,7 @@
 #include <fstream>
 #include <random>
 #include "GP.h"
-#include "GPStruct.h"
+// #include "GPStruct.h"
 #include <vector>
 #include <sstream>
 #include <chrono>
@@ -12,7 +12,8 @@
 class Dataset {
   public:
     std::vector<std::vector<double>> data;
-    std::vector<std::string> columnNames;
+    // 0: boolean, 1: float
+    std::vector<std::pair<std::string, int>> columnTypes;
 };
 
 Dataset* fetchDataset(std::string datasetName) {
@@ -35,17 +36,21 @@ Dataset* fetchDataset(std::string datasetName) {
   std::string line;
 
   std::getline(file, line);
-  std::vector<std::string> columnNames;
+  std::vector<std::pair<std::string, int>> columnTypes;
   std::stringstream ss(line);
   std::string token;
+
+  std::vector<std::string> booleanColumns = {"sex", "antivirals", "fatigue", "malaise", "anorexia", "histology"};
 
   while (std::getline(ss, token, '\t')) {
     token.erase(0, token.find_first_not_of(" \t"));
     token.erase(token.find_last_not_of(" \t") + 1);
-    columnNames.push_back(token);
+    if (std::find(booleanColumns.begin(), booleanColumns.end(), token) != booleanColumns.end()) {
+      columnTypes.push_back({token, 0});
+    } else {
+      columnTypes.push_back({token, 1});
+    }
   }
-
-  int numCols = columnNames.size();
 
   std::vector<std::vector<double>> fullDataset;
 
@@ -68,14 +73,15 @@ Dataset* fetchDataset(std::string datasetName) {
   
   Dataset* ds = new Dataset();
   ds->data = fullDataset;
-  ds->columnNames = columnNames;
+  ds->columnTypes = columnTypes;
 
   std::cout << "Dataset size: " << ds->data.size() << " x " << ds->data[0].size() << std::endl;
   std::cout << "Column names: ";
-  for (const auto& name : ds->columnNames) {
-    std::cout << name << "\t";
-  }
   std::cout << std::endl;
+  for (const auto& name : ds->columnTypes) {
+    std::cout << name.first << " (" << (name.second == 0 ? "boolean" : "float") << "), " << std::endl;
+  }
+  std::cout << "___________________" << std::endl;
 
   std::cout << "Dataset '" << datasetName << "' loaded!" << std::endl;
 
@@ -104,7 +110,11 @@ int main() {
   // file2 << "generation,individual,TL" << std::endl;
   // file2.close();
 
-  std::vector<std::string> colNames = dataset->columnNames;
+  // still store column names
+  std::vector<std::string> columnNames;
+  for (const auto& name : dataset->columnTypes) {
+    columnNames.push_back(name.first);
+  }
 
   int populationSize = 1;
   int maxDepth = 3;
@@ -112,7 +122,7 @@ int main() {
   std::vector<double> applicationRates = {0.85, 0.05}; // crossoverRate, mutationRate
   int tournamentSize = 4;
   int runs = 1; // each run includes transfer learning
-  std::vector<GPStruct*> gps;
+  std::vector<GP*> gps;
 
   gps.resize(runs);
 
@@ -123,7 +133,7 @@ int main() {
   for (int i = 0; i < runs; i++) {
     // start chrono
     auto start = std::chrono::high_resolution_clock::now();
-    gps[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnNames, i);
+    gps[i] = new GP(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, columnNames, i);
     gps[i]->cachePopulation(i);
     std::srand(i);
     gps[i]->train(i);
