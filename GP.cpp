@@ -367,7 +367,7 @@ GPNode* GP::bestTree() {
 
 double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
   double F1 = 0.0;
-  double threshold = 0.6;
+  double threshold = 0.5;
   double confusionMatrix[2][2] = {0.0}; // TP, TN, FP, FN
 
   std::vector<std::vector<double>> dataset;
@@ -408,17 +408,17 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
 
     // determine the confusion matrix
     if (treeFitness == 1.0 && actual == 1.0) {
-      confusionMatrix[0][0]++;
+      confusionMatrix[0][0] += 1.0;
     } else if (treeFitness == 1.0 && actual == 0.0) {
-      confusionMatrix[0][1]++;
+      confusionMatrix[0][1] += 1.0;
     } else if (treeFitness == 0.0 && actual == 1.0) {
-      confusionMatrix[1][0]++;
+      confusionMatrix[1][0] += 1.0;
     } else if (treeFitness == 0.0 && actual == 0.0) {
-      confusionMatrix[1][1]++;
+      confusionMatrix[1][1] += 1.0;
     }
   }
 
-  if (confusionMatrix[0][0] + confusionMatrix[0][1] == 0 || confusionMatrix[1][0] + confusionMatrix[1][1] == 0) {
+  if (confusionMatrix[0][0] + confusionMatrix[0][1] == 0 || confusionMatrix[0][0] + confusionMatrix[1][0] == 0) {
     return 0.0; // avoid division by zero
   }
   

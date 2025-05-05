@@ -105,11 +105,11 @@ int main() {
 
   std::vector<std::string> colNames = dataset->columnNames;
 
-  int populationSize = 50;
-  int maxDepth = 5;
-  int maxGenerations = 1;
-  std::vector<double> applicationRates = {0.65, 0.05}; // crossoverRate, mutationRate
-  int tournamentSize = 7;
+  int populationSize = 1;
+  int maxDepth = 3;
+  int maxGenerations = 0;
+  std::vector<double> applicationRates = {0.85, 0.05}; // crossoverRate, mutationRate
+  int tournamentSize = 4;
   int runs = 1; // each run includes transfer learning
   std::vector<GP*> gps;
 
