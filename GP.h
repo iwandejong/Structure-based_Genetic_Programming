@@ -62,7 +62,6 @@ class GP {
     // metrics
     GPNode* bestTree();
     double fitness(const GPNode& tree, const std::string& set, bool recal = false);
-    double calculateROCAUC(const std::vector<double>& predictions, const std::vector<double>& actuals);
     double populationFitness();
     
     // misc

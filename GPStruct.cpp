@@ -368,7 +368,9 @@ GPNodeStruct* GPStruct::bestTree() {
 }
 
 double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool recal) {
-  double SE = 0.0;
+  double F1 = 0.0;
+  double threshold = 0.5;
+  double confusionMatrix[2][2] = {0.0}; // TP, TN, FP, FN
 
   std::vector<std::vector<double>> dataset;
   if (set == "train") {
@@ -391,7 +393,7 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
     }
 
     if (std::isnan(treeFitness) || std::isinf(treeFitness)) {
-      return 1.0;
+      return 0.0; // bad F1-score
     }
 
     double actual = dataset[i][dataset[0].size() - 1];
@@ -399,10 +401,35 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
     // clip with a function to avoid overflow, we want the output to be normalised as well...
     treeFitness = 1 / (1 + exp(-treeFitness));
 
-    SE += pow(treeFitness - actual, 2);
+    // use threshold to determine if the prediction is correct
+    if (treeFitness >= threshold) {
+      treeFitness = 1.0;
+    } else {
+      treeFitness = 0.0;
+    }
+
+    // determine the confusion matrix
+    if (treeFitness == 1.0 && actual == 1.0) {
+      confusionMatrix[0][0] += 1.0;
+    } else if (treeFitness == 1.0 && actual == 0.0) {
+      confusionMatrix[0][1] += 1.0;
+    } else if (treeFitness == 0.0 && actual == 1.0) {
+      confusionMatrix[1][0] += 1.0;
+    } else if (treeFitness == 0.0 && actual == 0.0) {
+      confusionMatrix[1][1] += 1.0;
+    }
   }
-  SE /= dataset.size();
-  return SE; // * minimize fitness
+
+  if (confusionMatrix[0][0] + confusionMatrix[0][1] == 0 || confusionMatrix[0][0] + confusionMatrix[1][0] == 0) {
+    return 0.0; // avoid division by zero
+  }
+  
+  // calculate the precision and recall
+  double precision = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[0][1]);
+  double recall = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[1][0]);
+  double f1 = 2 * (precision * recall) / (precision + recall);
+
+  return f1; // * maximize fitness
 }
 
 double GPStruct::populationFitness() {

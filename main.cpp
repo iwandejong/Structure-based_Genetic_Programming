@@ -2,6 +2,7 @@
 #include <fstream>
 #include <random>
 #include "GP.h"
+#include "GPStruct.h"
 #include <vector>
 #include <sstream>
 #include <chrono>
@@ -111,7 +112,7 @@ int main() {
   std::vector<double> applicationRates = {0.85, 0.05}; // crossoverRate, mutationRate
   int tournamentSize = 4;
   int runs = 1; // each run includes transfer learning
-  std::vector<GP*> gps;
+  std::vector<GPStruct*> gps;
 
   gps.resize(runs);
 
@@ -122,7 +123,7 @@ int main() {
   for (int i = 0; i < runs; i++) {
     // start chrono
     auto start = std::chrono::high_resolution_clock::now();
-    gps[i] = new GP(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnNames, i);
+    gps[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnNames, i);
     gps[i]->cachePopulation(i);
     std::srand(i);
     gps[i]->train(i);
