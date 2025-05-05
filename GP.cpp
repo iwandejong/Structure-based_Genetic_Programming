@@ -224,7 +224,7 @@ void GP::train(int run, int gen) {
     double bTF = fitness(*bestTree(), "train");
     // double bTFtest = fitness(bestTree(), "test", true);
     double bTFtest = 0.0;
-    appendToCSV({std::to_string(run),std::to_string(i+gen),std::to_string(popFitness),std::to_string(bTF),std::to_string(action)});
+    // appendToCSV({std::to_string(run),std::to_string(i+gen),std::to_string(popFitness),std::to_string(bTF),std::to_string(action)});
 
     std::string colorAction = action == 0 ? "\033[91m" : action == 1 ? "\033[92m" : "\033[93m";
     std::string printAction = action == 0 ? "Reproduction" : action == 1 ? "Crossover" : "Mutation";
@@ -257,7 +257,7 @@ double GP::test(int run, bool TL) {
   }
   std::cout << "Best Tree Formula" << std::endl << tree->formula() << std::endl;
   double treeFitness = fitness(*tree, "test", true);
-  appendToCSV({std::to_string(run),std::to_string(TL ? -2 : -1),std::to_string(-1),std::to_string(treeFitness),std::to_string(-1)});
+  // appendToCSV({std::to_string(run),std::to_string(TL ? -2 : -1),std::to_string(-1),std::to_string(treeFitness),std::to_string(-1)});
   // vizTree(tree);
   std::cout << "Testing Results" << std::endl << "MSE: " << std::to_string(treeFitness) << std::endl;
 
@@ -281,9 +281,7 @@ std::vector<GPNode*> GP::tournamentSelection(bool TL) {
     double wF = currPopFitness[initialRandom];
     for (int i = 0; i < tournamentSize; i++) {
       double tF = fitness(*tempPopulation[i], "train");
-      // if (tF > wF) { // * inverse selection because of steady-state control model (not used, only experimental)
-      if (tF < wF) {
-      // if (TL ? tF < wF : tF > wF) { // * inverse selection because of steady-state control model (not used, only experimental)
+      if (tF > wF) { // * maximize fitness
         winner = tempPopulation[i];
         wF = tF;
       }
@@ -354,11 +352,11 @@ void GP::crossover(const GPNode& tree1, const GPNode& tree2) {
 
 // metrics
 GPNode* GP::bestTree() {
-  double bestFitness = INFINITY; // * minimize fitness
+  double bestFitness = 0.0; // * maximize fitness
   GPNode* currBestTree = nullptr;
   for (int i = 0; i < populationSize; i++) {
     double tF = fitness(*population[i], "train");
-    if (tF < bestFitness) { // * minimize fitness
+    if (tF > bestFitness) { // * maximize fitness
       bestFitness = tF;
       currBestTree = population[i];
     }
@@ -368,7 +366,9 @@ GPNode* GP::bestTree() {
 }
 
 double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
-  double SE = 0.0;
+  double F1 = 0.0;
+  double threshold = 0.6;
+  double confusionMatrix[2][2] = {0.0}; // TP, TN, FP, FN
 
   std::vector<std::vector<double>> dataset;
   if (set == "train") {
@@ -391,7 +391,7 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
     }
 
     if (std::isnan(treeFitness) || std::isinf(treeFitness)) {
-      return 1.0;
+      return 0.0; // bad F1-score
     }
 
     double actual = dataset[i][dataset[0].size() - 1];
@@ -399,10 +399,35 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
     // clip with a function to avoid overflow, we want the output to be normalised as well...
     treeFitness = 1 / (1 + exp(-treeFitness));
 
-    SE += pow(treeFitness - actual, 2);
+    // use threshold to determine if the prediction is correct
+    if (treeFitness >= threshold) {
+      treeFitness = 1.0;
+    } else {
+      treeFitness = 0.0;
+    }
+
+    // determine the confusion matrix
+    if (treeFitness == 1.0 && actual == 1.0) {
+      confusionMatrix[0][0]++;
+    } else if (treeFitness == 1.0 && actual == 0.0) {
+      confusionMatrix[0][1]++;
+    } else if (treeFitness == 0.0 && actual == 1.0) {
+      confusionMatrix[1][0]++;
+    } else if (treeFitness == 0.0 && actual == 0.0) {
+      confusionMatrix[1][1]++;
+    }
   }
-  SE /= dataset.size();
-  return SE; // * minimize fitness
+
+  if (confusionMatrix[0][0] + confusionMatrix[0][1] == 0 || confusionMatrix[1][0] + confusionMatrix[1][1] == 0) {
+    return 0.0; // avoid division by zero
+  }
+  
+  // calculate the precision and recall
+  double precision = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[0][1]);
+  double recall = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[1][0]);
+  double f1 = 2 * (precision * recall) / (precision + recall);
+
+  return f1; // * maximize fitness
 }
 
 double GP::populationFitness() {
