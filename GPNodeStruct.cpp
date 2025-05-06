@@ -8,30 +8,7 @@ GPNodeStruct::GPNodeStruct(const GPNodeStruct& other) {
   }
 }
 
-std::string GPNodeStruct::formula() {
-  // if (!left && !right) {
-  //     return value; // Return value if it's a leaf node
-  // }
-  if (children.empty()) {
-    return value; // Return value if it's a leaf node
-  }
-
-  // std::string leftFormula = (left) ? left->formula() : "";
-  // std::string rightFormula = (right) ? right->formula() : "";
-
-  // return "(" + leftFormula + " " + value + " " + rightFormula + ")";
-
-  std::string result = "(";
-  for (size_t i = 0; i < children.size(); ++i) {
-    result += children[i]->formula();
-    if (i < children.size() - 1) {
-      result += " " + value + " ";
-    }
-  }
-  result += ")";
-  return result;
-}
-
+// booleans will return either 0 or 1
 double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vector<std::string>& colNames) const {
   if (isLeaf) {
     try {
@@ -45,66 +22,66 @@ double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vecto
     }
     return INFINITY; // can't be calculated, therefore a bad fitness
   }
-  
-  // double leftValue = left->fitness(inputs, colNames);
-  // if (right) {
-  //   double rightValue = right->fitness(inputs, colNames);
-    
-  //   if (value == "+") {
-  //     // return leftValue + rightValue;
-  //     return std::max(-1.0, std::min(1.0, leftValue + rightValue));
-  //   } else if (value == "-") {
-  //     // return leftValue - rightValue;
-  //     return std::max(-1.0, std::min(1.0, leftValue - rightValue));
-  //   } else if (value == "*") {
-  //     // return leftValue * rightValue;
-  //     return std::max(-1.0, std::min(1.0, leftValue * rightValue));
-  //   }else if (value == "/") {
-  //     // return protectedDiv(leftValue, rightValue);
-  //     return std::max(-1.0, std::min(1.0, protectedDiv(leftValue, rightValue)));
-  //   } else if (value == "max") {
-  //     return std::max(leftValue, rightValue);
-  //   } else if (value == "min") {
-  //     return std::min(leftValue, rightValue);
-  //   }
-  //   return INFINITY; // can't be calculated, therefore a bad fitness
-  // } else {
-  //   if (value == "exp") {
-  //     return std::max(-1.0, std::min(1.0, exp(leftValue)));
-  //   } else if (value == "sin") {
-  //     return sin(leftValue);
-  //   } else if (value == "cos") {
-  //     return cos(leftValue);
-  //   } else if (value == "log") {
-  //     if (leftValue <= -1.0) {
-  //       return -1.0; // log(<=-1.0) is undefined since -1.0+1.0=0.0, return a large negative value
-  //     }
-  //     return 0.5 * log(leftValue + 1.0) + 0.5;
-  //   } else if (value == "sigmoid") {
-  //     return 1.0 / (1.0 + exp(-leftValue));
-  //   }
-  //   return INFINITY; // can't be calculated, therefore a bad fitness
-  // }
 
   double result = 0.0;
-  for (size_t i = 0; i < children.size(); ++i) {
-    double childValue = children[i]->fitness(inputs, colNames);
-    if (i == 0) {
-      result = childValue;
-    } else {
-      if (value == "+") {
-        result += childValue;
-      } else if (value == "-") {
-        result -= childValue;
-      } else if (value == "*") {
-        result *= childValue;
-      } else if (value == "/") {
-        result = protectedDiv(result, childValue);
-      } else if (value == "max") {
-        result = std::max(result, childValue);
-      } else if (value == "min") {
-        result = std::min(result, childValue);
-      }
+  if (children.size() == 0) {
+    return INFINITY; // no children, can't be calculated
+  } else if (children.size() == 1) {
+    result = children[0]->fitness(inputs, colNames);
+  } else if (children.size() == 2) {
+    double left = children[0]->fitness(inputs, colNames);
+    double right = children[1]->fitness(inputs, colNames);
+
+    // const std::vector<std::string> validOperators = {"+", "*", "-", "/", "max", "min"}; // [returns float]
+    // const std::vector<std::string> validUnaryOperators = {"sigmoid", "sin", "cos", "log"}; // [returns float]
+    // const std::vector<std::string> validLogicalOperators = {"and", "or", "not"}; // [returns boolean]
+    // const std::vector<std::string> validComparisonOperators = {"<", ">", "<=", ">=", "==", "!="}; // [returns boolean]
+    if (value == "+") {
+      result = left + right;
+    } else if (value == "-") {
+      result = left - right;
+    } else if (value == "*") {
+      result = left * right;
+    } else if (value == "/") {
+      result = protectedDiv(left, right);
+    } else if (value == "max") {
+      result = std::max(left, right);
+    } else if (value == "min") {
+      result = std::min(left, right);
+    } else if (value == "sigmoid") {
+      result = 1.0 / (1.0 + std::exp(-left));
+    } else if (value == "sin") {
+      result = std::sin(left);
+    } else if (value == "cos") {
+      result = std::cos(left);
+    } else if (value == "log") {
+      result = std::log(left);
+    } else if (value == "and") {
+      result = static_cast<double>(static_cast<bool>(left) && static_cast<bool>(right));
+    } else if (value == "or") {
+      result = static_cast<double>(static_cast<bool>(left) || static_cast<bool>(right));
+    } else if (value == "not") {
+      result = static_cast<double>(!static_cast<bool>(left));
+    } else if (value == "<") {
+      result = static_cast<double>(left < right);
+    } else if (value == ">") {
+      result = static_cast<double>(left > right);
+    } else if (value == "<=") {
+      result = static_cast<double>(left <= right);
+    } else if (value == ">=") {
+      result = static_cast<double>(left >= right);
+    } else if (value == "==") {
+      result = static_cast<double>(left == right);
+    } else if (value == "!=") {
+      result = static_cast<double>(left != right);
+    }
+  } else if (children.size() == 3) {
+    bool condition = static_cast<bool>(children[0]->fitness(inputs, colNames)); // attempt to convert to boolean
+    double trueBranch = children[1]->fitness(inputs, colNames);
+    double falseBranch = children[2]->fitness(inputs, colNames);
+
+    if (value == "if") {
+      result = condition ? trueBranch : falseBranch;
     }
   }
   return result;
@@ -117,14 +94,11 @@ GPNodeStruct* GPNodeStruct::traverseToNth(int& n) const {
   }
   n--;
 
-  if (left) {
-    GPNodeStruct* leftResult = left->traverseToNth(n);
-    if (leftResult) return leftResult;
-  }
-
-  if (right) {
-    GPNodeStruct* rightResult = right->traverseToNth(n);
-    if (rightResult) return rightResult;
+  for (const auto& child : children) {
+    GPNodeStruct* result = child->traverseToNth(n);
+    if (result) {
+      return result;
+    }
   }
 
   return nullptr;
@@ -145,16 +119,14 @@ GPNodeStruct* GPNodeStruct::findParent(GPNodeStruct* child) const {
     return nullptr; // No parent for null child
   }
 
-  if (left == child || right == child) {
-    return const_cast<GPNodeStruct*>(this); // Return this node as the parent
+  for (const auto& c : children) {
+    if (c == child) {
+      return const_cast<GPNodeStruct*>(this); // Return this node as the parent
+    }
   }
   GPNodeStruct* parent = nullptr;
-  if (left) {
-    parent = left->findParent(child);
-    if (parent) return parent;
-  }
-  if (right) {
-    parent = right->findParent(child);
+  for (const auto& c : children) {
+    parent = c->findParent(child);
     if (parent) return parent;
   }
   return nullptr; // No parent found
@@ -166,23 +138,27 @@ GPNodeStruct* GPNodeStruct::findParentHelper(int& n, GPNodeStruct* parent) const
   }
   n--;
 
-  if (left) {
-    GPNodeStruct* leftResult = left->findParentHelper(n, const_cast<GPNodeStruct*>(this));
-    if (leftResult) return leftResult;
-  }
-
-  if (right) {
-    GPNodeStruct* rightResult = right->findParentHelper(n, const_cast<GPNodeStruct*>(this));
-    if (rightResult) return rightResult;
+  for (const auto& c : children) {
+    GPNodeStruct* childResult = c->findParentHelper(n, const_cast<GPNodeStruct*>(this));
+    if (childResult) return childResult;
   }
 
   return nullptr;
 }
 
+double GPNodeStruct::protectedDiv(const double& a, const double& b) const {
+  return (std::abs(b) < 1e-6) ? a : a / b;
+}
+
 int GPNodeStruct::treeSize() const {
-  if (left) return 1 + left->treeSize();
-  if (right) return 1 + right->treeSize();
-  return 1;
+  if (children.empty()) {
+    return 1;
+  }
+  int size = 1; // Count this node
+  for (const auto& child : children) {
+    size += child->treeSize();
+  }
+  return size;
 }
 
 int GPNodeStruct::calcDepth() const {
@@ -190,12 +166,19 @@ int GPNodeStruct::calcDepth() const {
       return 0;
   }
 
-  int leftDepth = (left) ? left->calcDepth() : 0;
-  int rightDepth = (right) ? right->calcDepth() : 0;
+  int depth0 = 0;
+  int depth1 = 0;
+  int depth2 = 0;
 
-  return 1 + std::max(leftDepth, rightDepth);
-}
+  for (const auto& child : children) {
+    if (child->children.size() == 0) {
+      depth0 = std::max(depth0, 1);
+    } else if (child->children.size() == 1) {
+      depth1 = std::max(depth1, child->calcDepth());
+    } else if (child->children.size() == 2) {
+      depth2 = std::max(depth2, child->calcDepth());
+    }
+  }
 
-double GPNodeStruct::protectedDiv(const double& a, const double& b) const {
-  return (std::abs(b) < 1e-6) ? a : a / b;
+  return 1 + std::max(depth0, std::max(depth1, depth2));
 }

@@ -26,8 +26,6 @@ class GPNodeStruct {
     int treeSize() const;
     int calcDepth() const;
     double protectedDiv(const double& a, const double& b) const;
-
-    std::string formula();
 };
 
 #endif // GP_NODE_STRUCT_H

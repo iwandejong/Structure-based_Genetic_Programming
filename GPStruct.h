@@ -27,21 +27,21 @@ class GPStruct {
     std::vector<std::vector<double>> validation;
     
     // add valid float terminals
-    std::vector<std::string> validFloatTerminals = {"double"};
+    std::vector<std::string> validFloatTerminals = {"double"}; // [is a float]
     // add valid boolean terminals
-    std::vector<std::string> validBooleanTerminals;
+    std::vector<std::string> validBooleanTerminals = {}; // [is a boolean]
 
-    const std::vector<std::string> validOperators = {"+", "*", "-", "/", "max", "min"};
-    const std::vector<std::string> validUnaryOperators = {"sigmoid", "sin", "cos", "log"};
+    const std::vector<std::string> validOperators = {"+", "*", "-", "/", "max", "min"}; // [returns float]
+    const std::vector<std::string> validUnaryOperators = {"sigmoid", "sin", "cos", "log"}; // [returns float]
     // for structure-based GP, we add conditional operators
-    const std::vector<std::string> validConditionalOperators = {"if", "ifelse", "and", "or", "not"};
+    const std::vector<std::string> validLogicalOperators = {"and", "or", "not"}; // [returns boolean]
+    const std::vector<std::string> validConditionalOperators = {"if"}; // [returns float/boolean]
     // params:
-    // if: if(condition, trueBranch, falseBranch)
-    // ifelse: ifelse(condition, trueBranch, falseBranch)
-    // and: and(condition1, condition2)
-    // or: or(condition1, condition2)
-    // not: not(condition)
-    const std::vector<std::string> validComparisonOperators = {"<", ">", "<=", ">=", "==", "!="};
+    // if: if(condition, trueBranch, falseBranch) [3]
+    // and: and(condition1, condition2) [2]
+    // or: or(condition1, condition2) [2]
+    // not: not(condition) [1]
+    const std::vector<std::string> validComparisonOperators = {"<", ">", "<=", ">=", "==", "!="}; // [returns boolean]
 
     std::vector<std::string> colNames;
 
@@ -52,9 +52,9 @@ class GPStruct {
     ~GPStruct();
 
     // initial population
-    void generateIndividual(GPNodeStruct* root, int maxDepth, std::string parentType);
-    std::string randomTerminal(std::string parentType);
-    std::string randomOperator();
+    void generateIndividual(GPNodeStruct* origin, GPNodeStruct* root, int maxDepth, bool logical);
+    std::string randomTerminal(bool parentRequiresBoolean);
+    std::string randomOperator(bool isConditional = false);
     void cachePopulation(int run, bool TL = false);
 
     // training & testing
@@ -78,9 +78,11 @@ class GPStruct {
     GPNodeStruct* getIndividual(const int& index);
     int getIndex(const GPNodeStruct& tree);
     void updateFitness(const GPNodeStruct& tree);
-    void vizTree(GPNodeStruct* tree);
     void appendToCSV(std::vector<std::string> input);
-    bool isUnary(std::string value);
+    int requiredOperands(std::string value);
+    bool isBooleanParent(std::string value);
+    int nodeLevel(GPNodeStruct* root, GPNodeStruct* targetNode);
+    bool isBooleanTerminal(std::string value);
 };
 
 #endif // GP_STRUCT_H
