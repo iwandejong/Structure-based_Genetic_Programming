@@ -52,7 +52,7 @@ class GPStruct {
     ~GPStruct();
 
     // initial population
-    void generateIndividual(GPNodeStruct* origin, GPNodeStruct* root, int maxDepth, bool logical);
+    void generateIndividual(GPNodeStruct* root, int maxDepth, bool logical);
     std::string randomTerminal(bool parentRequiresBoolean);
     std::string randomOperator(bool isConditional = false);
     void cachePopulation(int run, bool TL = false);
@@ -67,7 +67,7 @@ class GPStruct {
     
     // genetic operators
     void mutation(const GPNodeStruct& tree);
-    void crossover(const GPNodeStruct& tree1, const GPNodeStruct& tree2);
+    void crossover(GPNodeStruct* tree1, GPNodeStruct* tree2);
     
     // metrics
     GPNodeStruct* bestTree();
@@ -83,6 +83,8 @@ class GPStruct {
     bool isBooleanParent(std::string value);
     int nodeLevel(GPNodeStruct* root, GPNodeStruct* targetNode);
     bool isBooleanTerminal(std::string value);
+    void printTree(const GPNodeStruct* root, const GPNodeStruct* origin = nullptr, int depth = 0);
+    void printTree(const GPNodeStruct& root, int depth = 0);
 };
 
 #endif // GP_STRUCT_H

@@ -65,9 +65,7 @@ GPStruct::GPStruct(int populationSize, std::vector<std::vector<double>> dataset,
 
   for (int i = 0; i < populationSize; i++) {
     population[i] = new GPNodeStruct();
-    generateIndividual(population[i], population[i], maxDepth, std::rand() % 2 == 0);
-    // vizTree(population[i]);
-    std::cout << "___________________" << std::endl;
+    generateIndividual(population[i], maxDepth, std::rand() % 2 == 0);
   }
 }
 
@@ -92,7 +90,7 @@ void GPStruct::cachePopulation(int run, bool TL) {
 }
 
 // initial population
-void GPStruct::generateIndividual(GPNodeStruct* origin, GPNodeStruct* root, int maxDepth, bool logical) {
+void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth, bool logical) {
   if (maxDepth == 0) {
     root->value = randomTerminal(logical);
     root->isLeaf = true;
@@ -102,37 +100,11 @@ void GPStruct::generateIndividual(GPNodeStruct* origin, GPNodeStruct* root, int 
     if (root->value == "double") {
       root->value = std::to_string(static_cast<double>(std::rand()) / RAND_MAX * 1.0);
     }
-
-    if (origin != nullptr) {
-      std::string tabs = "";
-      std::string closingTabs = "";
-      for (int i = 0; i < nodeLevel(origin, root); i++) {
-        tabs += "\t";
-        if (i != 0) {
-          closingTabs += "\t";
-
-        }
-      }
-      // find if boolean, then print the colour
-      if (isBooleanTerminal(root->value)) {
-        std::cout << "\033[31m" << tabs << root->value << std::endl << "\033[0m";
-      } else {
-        std::cout << "\033[33m" << tabs << root->value << std::endl << "\033[0m";
-      }
-    }
     return;
   }
   
   root->value = randomOperator(logical);
   root->isLeaf = false;
-
-  if (origin != nullptr) {
-    std::string tabs = "";
-    for (int i = 0; i < nodeLevel(origin, root); i++) {
-      tabs += "\t";
-    }
-    std::cout << tabs << root->value << std::endl;
-  }
   
   int required = requiredOperands(root->value);
   // std::cout << root->value << ";" << required << std::endl;
@@ -141,7 +113,7 @@ void GPStruct::generateIndividual(GPNodeStruct* origin, GPNodeStruct* root, int 
   if (required == 3) {
     root->children.push_back(new GPNodeStruct());
     // std::cout << "Parent " << root->value << " [isLogical: " << true << "] with operator " << root->children[0]->value << std::endl;
-    generateIndividual(origin, root->children[0], (maxDepth - 1 == 0 ? 1 : maxDepth - 1), true); // true because we want a boolean as result
+    generateIndividual(root->children[0], (maxDepth - 1 == 0 ? 1 : maxDepth - 1), true); // true because we want a boolean as result
     required--;
   }
 
@@ -152,9 +124,9 @@ void GPStruct::generateIndividual(GPNodeStruct* origin, GPNodeStruct* root, int 
     bool isLogical = isBooleanParent(root->value);
     // std::cout << "Parent " << root->value << " [isLogical: " << isLogical << "]" << std::endl;
     if (grow) {
-      generateIndividual(origin, root->children[i], maxDepth - 1, isLogical); 
+      generateIndividual(root->children[i], maxDepth - 1, isLogical); 
     } else {
-      generateIndividual(origin, root->children[i], 0, isLogical);
+      generateIndividual(root->children[i], 0, isLogical);
     }
   }
 
@@ -258,7 +230,7 @@ void GPStruct::train(int run, int gen) {
     double aR = static_cast<double>(std::rand()) / RAND_MAX;
     int action = 0;
     if (aR < crossoverRate) {
-      crossover(*parents[0], *parents[1]);
+      crossover(parents[0], parents[1]);
       action = 1;
     } else if (aR < crossoverRate + mutationRate) {
       mutation(std::rand() % 2 == 0 ? *parents[0] : *parents[1]);
@@ -310,14 +282,20 @@ double GPStruct::test(int run, bool TL) {
 // selection method
 std::vector<GPNodeStruct*> GPStruct::tournamentSelection(bool TL) {
   std::vector<GPNodeStruct*> newPopulation(tournamentSize);
-  
+  std::vector<int> selectedIndices;
+
   for (int p = 0; p < 2; p++) {
     std::vector<GPNodeStruct*> tempPopulation(tournamentSize);
     int randomIndividual = std::rand() % populationSize; 
     int initialRandom = randomIndividual;
+    selectedIndices.push_back(randomIndividual);
     for (int x = 0; x < tournamentSize; x++) {
       tempPopulation[x] = population[randomIndividual];
       randomIndividual = std::rand() % populationSize;
+      while (std::find(selectedIndices.begin(), selectedIndices.end(), randomIndividual) != selectedIndices.end()) {
+        randomIndividual = std::rand() % populationSize;
+      }
+      selectedIndices.push_back(randomIndividual);
     }
     
     GPNodeStruct* winner = tempPopulation[0];
@@ -337,38 +315,24 @@ std::vector<GPNodeStruct*> GPStruct::tournamentSelection(bool TL) {
 
 // genetic operators
 void GPStruct::mutation(const GPNodeStruct& tree) {
-  // if (static_cast<double>(std::rand()) / RAND_MAX < mutationRate) {
-    // std::cout << "Performing Mutation" << std::endl;
-    // vizTree(tree);
-    int mutationPoint = std::rand() % tree.treeSize();
-    GPNodeStruct* temp = tree.traverseToNth(mutationPoint);
-    generateIndividual(nullptr, temp, std::rand() % maxDepth, isBooleanParent(temp->value));
-    // vizTree(tree);
-
-    // recalculate fitness for the mutated tree
-    updateFitness(tree);
-  // }
+  int mutationPoint = std::rand() % tree.treeSize();
+  GPNodeStruct* temp = tree.traverseToNth(mutationPoint);
+  generateIndividual(temp, std::rand() % maxDepth, isBooleanParent(temp->value));
+  updateFitness(tree);
 }
 
-void GPStruct::crossover(const GPNodeStruct& tree1, const GPNodeStruct& tree2) {
-  // std::cout << "Performing Crossover" << std::endl;
-  // std::cout << "################" << std::endl;
-  // std::cout << (tree1 == tree2) << std::endl;
-  // vizTree(tree1);
-  // vizTree(tree2);
-  int x = tree1.treeSize();
-  int y = tree2.treeSize();
+void GPStruct::crossover(GPNodeStruct* tree1, GPNodeStruct* tree2) {
+  int x = tree1->treeSize();
+  int y = tree2->treeSize();
   
   int t1CP = std::rand() % x;
   int t2CP = std::rand() % y;
   
-  GPNodeStruct* temp1 = tree1.traverseToNth(t1CP);
-  GPNodeStruct* temp2 = tree2.traverseToNth(t2CP);
-  // vizTree(temp1);
-  // vizTree(temp2);
+  GPNodeStruct* temp1 = tree1->traverseToNth(t1CP);
+  GPNodeStruct* temp2 = tree2->traverseToNth(t2CP);
 
-  GPNodeStruct* tempParent1 = tree1.findParent(temp1);
-  GPNodeStruct* tempParent2 = tree2.findParent(temp2);
+  GPNodeStruct* tempParent1 = tree1->findParent(temp1);
+  GPNodeStruct* tempParent2 = tree2->findParent(temp2);
 
   if (!tempParent1 || !tempParent2 || temp1 == temp2) return;
   
@@ -435,10 +399,6 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
     // clip with a function to avoid overflow, we want the output to be normalised as well...
     treeFitness = 1 / (1 + exp(-treeFitness));
 
-    double diff = treeFitness - actual;
-    // std::cout << "TF: " << std::to_string(treeFitness) << " | Actual: " << std::to_string(actual) << " | Diff: " << std::to_string(diff) << std::endl;
-
-
     // use threshold to determine if the prediction is correct. If the tree returns 0.0 (false), then it will remain false with the threshold
     if (treeFitness > threshold) {
       treeFitness = 1.0;
@@ -447,13 +407,13 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
     }
 
     // determine the confusion matrix
-    if (treeFitness == 1.0 && actual == 0.0) {
+    if (treeFitness == 1.0 && actual == 1.0) {
       confusionMatrix[0][0] += 1.0; // TP
-    } else if (treeFitness == 1.0 && actual == 1.0) {
+    } else if (treeFitness == 1.0 && actual == 0.0) {
       confusionMatrix[0][1] += 1.0; // FP
-    } else if (treeFitness == 0.0 && actual == 0.0) {
-      confusionMatrix[1][0] += 1.0; // FN
     } else if (treeFitness == 0.0 && actual == 1.0) {
+      confusionMatrix[1][0] += 1.0; // FN
+    } else if (treeFitness == 0.0 && actual == 0.0) {
       confusionMatrix[1][1] += 1.0; // TN
     }
   }
@@ -523,4 +483,41 @@ void GPStruct::appendToCSV(std::vector<std::string> input) {
   file << std::endl;
   
   file.close();
+}
+
+void GPStruct::printTree(const GPNodeStruct* root, const GPNodeStruct* origin, int depth) {
+  if (root == nullptr) {
+      return;
+  }
+  
+  // Create indentation based on depth
+  std::string tabs = "";
+  for (int i = 0; i < depth; i++) {
+      tabs += "\t";
+  }
+  
+  // Print the node value with appropriate color
+  if (root->isLeaf) {
+      // Terminal nodes
+      if (isBooleanTerminal(root->value)) {
+          // Boolean terminals in red
+          std::cout << "\033[31m" << tabs << root->value << "\033[0m" << std::endl;
+      } else {
+          // Other terminals in yellow
+          std::cout << "\033[33m" << tabs << root->value << "\033[0m" << std::endl;
+      }
+  } else {
+      // Operator nodes (no color)
+      std::cout << tabs << root->value << std::endl;
+  }
+  
+  // Recursively print all children
+  for (const GPNodeStruct* child : root->children) {
+      printTree(child, origin, depth + 1);
+  }
+}
+
+void GPStruct::printTree(const GPNodeStruct& root, int depth) {
+  // Forward to the pointer version
+  printTree(&root, nullptr, depth);
 }

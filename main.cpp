@@ -90,7 +90,8 @@ Dataset* fetchDataset(std::string datasetName) {
 }
 
 int main() {
-  Dataset* dataset = fetchDataset("preprocessing/hepatitis_cleaned.tsv");
+  Dataset* dataset = fetchDataset("preprocessing/hepatitis_upsampled.tsv");
+  // Dataset* dataset = fetchDataset("preprocessing/hepatitis_cleaned.tsv");
 
   if (!dataset) {
     std::cerr << "Failed to load datasets" << std::endl;
@@ -118,11 +119,11 @@ int main() {
     columnNames.push_back(name.first);
   }
 
-  int populationSize = 10;
+  int populationSize = 50;
   int maxDepth = 4;
-  int maxGenerations = 50;
-  std::vector<double> applicationRates = {0.85, 0.05}; // crossoverRate, mutationRate
-  int tournamentSize = 7;
+  int maxGenerations = 100;
+  std::vector<double> applicationRates = {0.75, 0.075}; // crossoverRate, mutationRate
+  int tournamentSize = 5;
   int runs = 1; // each run includes transfer learning
   std::vector<GPStruct*> gps;
 
@@ -139,8 +140,8 @@ int main() {
     // gps[i] = new GPpopulationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, columnNames, i);
     gps[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnTypes, i);
     gps[i]->cachePopulation(i);
-    // gps[i]->train(i);
-    // bestFitness[i] = gps[i]->test(i, false);
+    gps[i]->train(i);
+    bestFitness[i] = gps[i]->test(i, false);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Run " << i+1 << "/" << runs << " completed in " << elapsed.count() << " seconds" << std::endl;
