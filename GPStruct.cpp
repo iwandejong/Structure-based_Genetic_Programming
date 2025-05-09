@@ -124,9 +124,9 @@ void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth, bool logical
     bool isLogical = isBooleanParent(root->value);
     // std::cout << "Parent " << root->value << " [isLogical: " << isLogical << "]" << std::endl;
     if (grow) {
-      generateIndividual(root->children[i], maxDepth - 1, isLogical); 
+      generateIndividual(root->children[i], maxDepth - 1, std::rand() % 2 == 0);
     } else {
-      generateIndividual(root->children[i], 0, isLogical);
+      generateIndividual(root->children[i], 0, std::rand() % 2 == 0);
     }
   }
 

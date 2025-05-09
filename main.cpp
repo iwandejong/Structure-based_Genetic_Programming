@@ -119,16 +119,17 @@ int main() {
     columnNames.push_back(name.first);
   }
 
-  int populationSize = 75;
-  int maxDepth = 3;
-  int maxGenerations = 150;
-  std::vector<double> applicationRates = {0.65, 0.05}; // crossoverRate, mutationRate
+  int populationSize = 100;
+  int maxDepth = 7;
+  int maxGenerations = 500;
+  std::vector<double> applicationRates = {0.75, 0.05}; // crossoverRate, mutationRate
   int tournamentSize = 4;
   int runs = 10;
   std::vector<GPStruct*> gp_structs;
   std::vector<GP*> gps;
 
   gps.resize(runs);
+  gp_structs.resize(runs);
 
   // across-run-stats
   std::vector<double> bestFitness(runs);
@@ -148,15 +149,15 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
     
     // structure-based GP
-    start = std::chrono::high_resolution_clock::now();
+    auto start_struct = std::chrono::high_resolution_clock::now();
     gp_structs[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnTypes, i);
     gp_structs[i]->cachePopulation(i);
     gp_structs[i]->train(i);
     bestFitnessStruct[i] = gp_structs[i]->test(i, false);
-    end = std::chrono::high_resolution_clock::now();
+    auto end_struct = std::chrono::high_resolution_clock::now();
     
     std::chrono::duration<double> elapsed = end - start;
-    std::chrono::duration<double> elapsed2 = end - start;
+    std::chrono::duration<double> elapsed2 = end_struct - start_struct;
     std::cout << "Normal GP for run " << i+1 << " completed in " << elapsed.count() << " seconds" << std::endl;
     std::cout << "Structure-based GP for run " << i+1 << " completed in " << elapsed2.count() << " seconds" << std::endl;
     std::cout << "___________________" << std::endl;
