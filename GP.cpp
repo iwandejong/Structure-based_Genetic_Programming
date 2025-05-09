@@ -304,7 +304,7 @@ GPNode* GP::bestTree() {
 
 double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
   double F1 = 0.0;
-  double threshold = 0.5;
+  double threshold = 0.0;
   double confusionMatrix[2][2] = {0.0}; // TP, TN, FP, FN
 
   std::vector<std::vector<double>> dataset;
@@ -328,16 +328,17 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
     }
 
     if (std::isnan(treeFitness) || std::isinf(treeFitness)) {
+      std::cerr << "Invalid fitness value" << std::endl;
       return 0.0; // bad F1-score
     }
 
     double actual = dataset[i][dataset[0].size() - 1];
 
     // clip with a function to avoid overflow, we want the output to be normalised as well...
-    treeFitness = 1 / (1 + exp(-treeFitness));
+    treeFitness = tanh(treeFitness); // * normalize to [-1, 1]
 
-    // use threshold to determine if the prediction is correct
-    if (treeFitness >= threshold) {
+    // use threshold to determine if the prediction is correct. If the tree returns 0.0 (false), then it will remain false with the threshold
+    if (treeFitness > threshold) {
       treeFitness = 1.0;
     } else {
       treeFitness = 0.0;
@@ -345,23 +346,30 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
 
     // determine the confusion matrix
     if (treeFitness == 1.0 && actual == 1.0) {
-      confusionMatrix[0][0] += 1.0;
+      confusionMatrix[0][0] += 1.0; // TP
     } else if (treeFitness == 1.0 && actual == 0.0) {
-      confusionMatrix[0][1] += 1.0;
+      confusionMatrix[0][1] += 1.0; // FP
     } else if (treeFitness == 0.0 && actual == 1.0) {
-      confusionMatrix[1][0] += 1.0;
+      confusionMatrix[1][0] += 1.0; // FN
     } else if (treeFitness == 0.0 && actual == 0.0) {
-      confusionMatrix[1][1] += 1.0;
+      confusionMatrix[1][1] += 1.0; // TN
     }
   }
 
   if (confusionMatrix[0][0] + confusionMatrix[0][1] == 0 || confusionMatrix[0][0] + confusionMatrix[1][0] == 0) {
+    // std::cerr << "Invalid confusion matrix" << std::endl;
     return 0.0; // avoid division by zero
   }
   
   // calculate the precision and recall
   double precision = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[0][1]);
   double recall = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[1][0]);
+
+  if (precision + recall == 0) {
+    // std::cerr << "Invalid precision and recall" << std::endl;
+    return 0.0; // avoid division by zero
+  }
+
   double f1 = 2 * (precision * recall) / (precision + recall);
 
   return f1; // * maximize fitness

@@ -315,9 +315,32 @@ std::vector<GPNodeStruct*> GPStruct::tournamentSelection(bool TL) {
 
 // genetic operators
 void GPStruct::mutation(const GPNodeStruct& tree) {
-  int mutationPoint = std::rand() % tree.treeSize();
-  GPNodeStruct* temp = tree.traverseToNth(mutationPoint);
-  generateIndividual(temp, std::rand() % maxDepth, isBooleanParent(temp->value));
+  int treeSize = tree.treeSize();
+  int mutationPoint = std::rand() % treeSize;
+  GPNodeStruct* node = tree.traverseToNth(mutationPoint);
+  
+  // Point mutation vs subtree mutation with 50% probability
+  if (std::rand() % 2 == 0) {
+    // Point mutation - just change the operation/value
+    if (!node->isLeaf) {
+      // For operators, replace with compatible operator
+      bool isLogical = isBooleanParent(node->value);
+      node->value = randomOperator(isLogical);
+    } else {
+      // For terminals, replace with compatible terminal
+      bool requiresBoolean = false;
+      GPNodeStruct* parent = tree.findParent(node);
+      if (parent) {
+        requiresBoolean = isBooleanParent(parent->value);
+      }
+      node->value = randomTerminal(requiresBoolean);
+    }
+  } else {
+    // Subtree mutation - replace entire subtree
+    int maxSubtreeDepth = 2; // Smaller replacement trees
+    generateIndividual(node, std::rand() % maxSubtreeDepth, isBooleanParent(node->value));
+  }
+  
   updateFitness(tree);
 }
 
@@ -325,28 +348,47 @@ void GPStruct::crossover(GPNodeStruct* tree1, GPNodeStruct* tree2) {
   int x = tree1->treeSize();
   int y = tree2->treeSize();
   
-  int t1CP = std::rand() % x;
-  int t2CP = std::rand() % y;
-  
-  GPNodeStruct* temp1 = tree1->traverseToNth(t1CP);
-  GPNodeStruct* temp2 = tree2->traverseToNth(t2CP);
-
-  GPNodeStruct* tempParent1 = tree1->findParent(temp1);
-  GPNodeStruct* tempParent2 = tree2->findParent(temp2);
-
-  if (!tempParent1 || !tempParent2 || temp1 == temp2) return;
-  
-  // swop all the children of the parents
-  for (int i = 0; i < tempParent1->children.size(); i++) {
-    if (tempParent1->children[i] == temp1) {
-      tempParent1->children[i] = temp2;
+  // Try multiple times to find compatible crossover points
+  for (int attempt = 0; attempt < 5; attempt++) {
+    int t1CP = std::rand() % x;
+    int t2CP = std::rand() % y;
+    
+    GPNodeStruct* temp1 = tree1->traverseToNth(t1CP);
+    GPNodeStruct* temp2 = tree2->traverseToNth(t2CP);
+    
+    // Check if both nodes are of compatible types
+    bool temp1IsBoolean = isBooleanTerminal(temp1->value) || 
+                          (temp1->children.size() > 0 && isBooleanParent(temp1->value));
+    bool temp2IsBoolean = isBooleanTerminal(temp2->value) || 
+                          (temp2->children.size() > 0 && isBooleanParent(temp2->value));
+                          
+    if (temp1IsBoolean == temp2IsBoolean) {
+      // Types are compatible, proceed with crossover
+      GPNodeStruct* tempParent1 = tree1->findParent(temp1);
+      GPNodeStruct* tempParent2 = tree2->findParent(temp2);
+      
+      if (!tempParent1 || !tempParent2 || temp1 == temp2) continue;
+      
+      // Swap nodes in parents' children arrays
+      for (int i = 0; i < tempParent1->children.size(); i++) {
+        if (tempParent1->children[i] == temp1) {
+          tempParent1->children[i] = temp2;
+          break;
+        }
+      }
+      
+      for (int i = 0; i < tempParent2->children.size(); i++) {
+        if (tempParent2->children[i] == temp2) {
+          tempParent2->children[i] = temp1;
+          break;
+        }
+      }
+      
+      // Successful crossover
+      return;
     }
   }
-  for (int i = 0; i < tempParent2->children.size(); i++) {
-    if (tempParent2->children[i] == temp2) {
-      tempParent2->children[i] = temp1;
-    }
-  }
+  // If we get here, no compatible points were found after multiple attempts
 }
 
 // metrics
@@ -366,7 +408,7 @@ GPNodeStruct* GPStruct::bestTree() {
 
 double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool recal) {
   double F1 = 0.0;
-  double threshold = 0.5;
+  double threshold = 0.0;
   double confusionMatrix[2][2] = {0.0}; // TP, TN, FP, FN
 
   std::vector<std::vector<double>> dataset;
@@ -397,7 +439,7 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
     double actual = dataset[i][dataset[0].size() - 1];
 
     // clip with a function to avoid overflow, we want the output to be normalised as well...
-    treeFitness = 1 / (1 + exp(-treeFitness));
+    treeFitness = tanh(treeFitness); // * normalize to [-1, 1]
 
     // use threshold to determine if the prediction is correct. If the tree returns 0.0 (false), then it will remain false with the threshold
     if (treeFitness > threshold) {

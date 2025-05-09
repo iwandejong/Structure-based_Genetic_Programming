@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-// #include "GP.h"
+#include "GP.h"
 #include "GPStruct.h"
 #include <vector>
 #include <sstream>
@@ -119,48 +119,63 @@ int main() {
     columnNames.push_back(name.first);
   }
 
-  int populationSize = 50;
-  int maxDepth = 4;
-  int maxGenerations = 100;
-  std::vector<double> applicationRates = {0.75, 0.075}; // crossoverRate, mutationRate
-  int tournamentSize = 5;
-  int runs = 1; // each run includes transfer learning
-  std::vector<GPStruct*> gps;
+  int populationSize = 75;
+  int maxDepth = 3;
+  int maxGenerations = 150;
+  std::vector<double> applicationRates = {0.65, 0.05}; // crossoverRate, mutationRate
+  int tournamentSize = 4;
+  int runs = 10;
+  std::vector<GPStruct*> gp_structs;
+  std::vector<GP*> gps;
 
   gps.resize(runs);
 
   // across-run-stats
   std::vector<double> bestFitness(runs);
+  std::vector<double> bestFitnessStruct(runs);
   std::vector<double> avgDuration(runs);
+  std::vector<double> avgDurationStruct(runs);
 
   for (int i = 0; i < runs; i++) {
-    // start chrono
-    auto start = std::chrono::high_resolution_clock::now();
     std::srand(i);
-    // gps[i] = new GPpopulationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, columnNames, i);
-    gps[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnTypes, i);
+    
+    // normal GP
+    auto start = std::chrono::high_resolution_clock::now();
+    gps[i] = new GP(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, columnNames, i);
     gps[i]->cachePopulation(i);
     gps[i]->train(i);
     bestFitness[i] = gps[i]->test(i, false);
     auto end = std::chrono::high_resolution_clock::now();
+    
+    // structure-based GP
+    start = std::chrono::high_resolution_clock::now();
+    gp_structs[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnTypes, i);
+    gp_structs[i]->cachePopulation(i);
+    gp_structs[i]->train(i);
+    bestFitnessStruct[i] = gp_structs[i]->test(i, false);
+    end = std::chrono::high_resolution_clock::now();
+    
     std::chrono::duration<double> elapsed = end - start;
-    std::cout << "Run " << i+1 << "/" << runs << " completed in " << elapsed.count() << " seconds" << std::endl;
+    std::chrono::duration<double> elapsed2 = end - start;
+    std::cout << "Normal GP for run " << i+1 << " completed in " << elapsed.count() << " seconds" << std::endl;
+    std::cout << "Structure-based GP for run " << i+1 << " completed in " << elapsed2.count() << " seconds" << std::endl;
     std::cout << "___________________" << std::endl;
-
-    // store the duration and TL duration
+    
     avgDuration[i] = elapsed.count();
+    avgDurationStruct[i] = elapsed2.count();
   }
 
   // print the results
   std::cout << "Results:" << std::endl;
-  std::cout << "Run\tBest F1\tDuration" << std::endl;
+  std::cout << "Run\tBest F1\tStruct-F1\tTime\tStructTime" << std::endl;
   for (int i = 0; i < runs; i++) {
-    std::cout << i+1 << "\t" << bestFitness[i] << "\t" 
-              << avgDuration[i] << "s" << std::endl;
+    std::cout << i+1 << "\t" << bestFitness[i] << "\t" << bestFitnessStruct[i] << "\t" << avgDuration[i] << "\t" << avgDurationStruct[i] << std::endl;
   }
   std::cout << "___________________" << std::endl;
   std::cout << "Average Best F1: " << std::accumulate(bestFitness.begin(), bestFitness.end(), 0.0) / runs << std::endl;
+  std::cout << "Average Struct-F1: " << std::accumulate(bestFitnessStruct.begin(), bestFitnessStruct.end(), 0.0) / runs << std::endl;
   std::cout << "Average Duration: " << std::accumulate(avgDuration.begin(), avgDuration.end(), 0.0) / runs << " seconds (Total duration: " << std::accumulate(avgDuration.begin(), avgDuration.end(), 0.0) << " seconds)" << std::endl;
+  std::cout << "Average Struct Duration: " << std::accumulate(avgDurationStruct.begin(), avgDurationStruct.end(), 0.0) / runs << " seconds (Total duration: " << std::accumulate(avgDurationStruct.begin(), avgDurationStruct.end(), 0.0) << " seconds)" << std::endl;
   std::cout << "___________________" << std::endl;
 
   for (int i = 0; i < runs; i++) {
