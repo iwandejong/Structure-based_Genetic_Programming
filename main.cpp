@@ -119,19 +119,19 @@ int main() {
 
   // setup for normal GP
   int populationSize = 15;
-  int maxDepth = 6;
+  int maxDepth = 12;
   int maxGenerations = 25;
   std::vector<double> applicationRates = {0.8, 0.18}; // crossoverRate, mutationRate
   int tournamentSize = 5;
 
   // setup for structure-based GP
-  int populationSizeStruct = 15;
-  int maxDepthStruct = 10;
-  int maxGenerationsStruct = 10;
-  std::vector<double> applicationRatesStruct = {0.75, 0.25}; // crossoverRate, mutationRate
+  int populationSizeStruct = 150;
+  int maxDepthStruct = 8;
+  int maxGenerationsStruct = 300;
+  std::vector<double> applicationRatesStruct = {0.55, 0.25}; // crossoverRate, mutationRate
   int tournamentSizeStruct = 5;
 
-  int runs = 1;
+  int runs = 10;
   std::vector<GPStruct*> gps;
   std::vector<GPStruct*> gp_structs;
 

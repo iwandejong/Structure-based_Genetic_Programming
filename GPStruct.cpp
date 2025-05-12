@@ -11,10 +11,8 @@ GPStruct::GPStruct(int populationSize, std::vector<std::vector<double>> dataset,
     }
   }
 
-  // for structure-based GP
-  globalThreshold = 3;
-  localThreshold = 4;
-  cutoffDepth = depth * 0.5; // 50% of max depth
+  // set cutoff depth to 50%
+  this->cutoffDepth = depth / 2;
 
   // print float and boolean
   std::cout << "\033[33m" "Valid Float Terminals: ";
@@ -70,7 +68,7 @@ GPStruct::GPStruct(int populationSize, std::vector<std::vector<double>> dataset,
 
   for (int i = 0; i < populationSize; i++) {
     population[i] = new GPNodeStruct();
-    generateIndividual(population[i], maxDepth, std::rand() % 2 == 0);
+    generateIndividual(population[i], maxDepth, std::rand() % 5 == 0);
   }
 }
 
@@ -85,8 +83,6 @@ void GPStruct::cachePopulation(int run) {
   double BACC_sum = 0.0;
   for (int i = 0; i < populationSize; i++) {
     double tF = fitness(*population[i], "train", true);
-    // double tFtest = fitness(population[i], "test", true);
-    double tFtest = 0.0;
     currPopFitness[i] = tF;
     std::cout << "\033[90m" "Caching Individual " << i+1 << "/" << populationSize << " [BACC: " << std::to_string(tF) << "]" << std::endl << "\033[0m";
     BACC_sum += tF;
@@ -103,7 +99,7 @@ void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth, bool logical
 
     // Generate a random double value between 0 and 1
     if (root->value == "double") {
-      root->value = std::to_string(static_cast<double>(std::rand()) / RAND_MAX * 2.0 - 1.0); // Random float between -1 and 1
+      root->value = std::to_string(static_cast<double>(std::rand()) / RAND_MAX * 1.0 - 0.5); // Random float between -0.5 and 0.5
     }
     return;
   }
@@ -120,9 +116,9 @@ void GPStruct::generateIndividual(GPNodeStruct* root, int maxDepth, bool logical
     bool isLogical = isBooleanParent(root->value);
     // std::cout << "Parent " << root->value << " [isLogical: " << isLogical << "]" << std::endl;
     if (grow) {
-      generateIndividual(root->children[i], maxDepth - 1, std::rand() % 2 == 0);
+      generateIndividual(root->children[i], maxDepth - 1, std::rand() % 5 == 0);
     } else {
-      generateIndividual(root->children[i], 0, std::rand() % 2 == 0);
+      generateIndividual(root->children[i], 0, std::rand() % 5 == 0);
     }
   }
 
@@ -149,7 +145,7 @@ std::string GPStruct::randomOperator(bool requiresBoolean) {
   std::vector<std::string> floatOperators;
   floatOperators.insert(floatOperators.end(), validOperators.begin(), validOperators.end());
   floatOperators.insert(floatOperators.end(), validUnaryOperators.begin(), validUnaryOperators.end());
-  floatOperators.insert(floatOperators.end(), validComparisonOperators.begin(), validComparisonOperators.end());
+  // floatOperators.insert(floatOperators.end(), validComparisonOperators.begin(), validComparisonOperators.end());
   
   return floatOperators[std::rand() % floatOperators.size()];
 }
@@ -250,12 +246,12 @@ void GPStruct::train(int run, bool structureBased) {
       // threshold check and replace
       if (GI1 < globalThreshold && LI1 < localThreshold) {
         population[i1] = parents[0];
-        currPopFitness[i1] = fitness(*population[i1], "train", true); // recalculate fitness
+        updateFitness(*population[i1]);
         std::cout << "\033[35m" "APPROVED P1" << std::endl << "\033[0m";
       }
       if (GI2 < globalThreshold && LI2 < localThreshold) {
         population[i2] = parents[1];
-        currPopFitness[i2] = fitness(*population[i2], "train", true); // recalculate fitness
+        updateFitness(*population[i2]);
         std::cout << "\033[35m" "APPROVED P2" << std::endl << "\033[0m";
       }
     } else {
@@ -289,7 +285,7 @@ int GPStruct::globalIndex(GPNodeStruct* tree) {
   int GI = 0;
   for (int i = 0; i < populationSize; ++i) {
     if (population[i] != nullptr && population[i] != tree) {
-      int treeSimilarity = computeSimilarity(tree, population[i], cutoffDepth);
+      int treeSimilarity = computeGlobalSimilarity(tree, population[i]);
       if (treeSimilarity > GI) { // * maximum tree similarity
         GI = treeSimilarity;
       }
@@ -304,7 +300,7 @@ int GPStruct::localIndex(GPNodeStruct* tree) {
   int GI = 0;
   for (int i = 0; i < populationSize; ++i) {
     if (population[i] != nullptr && population[i] != tree) {
-      int treeSimilarity = computeSimilarity(tree, population[i], 0, true);
+      int treeSimilarity = computeLocalSimilarity(tree, population[i]);
       if (treeSimilarity > GI) { // * maximum tree similarity
         GI = treeSimilarity;
       }
@@ -313,32 +309,37 @@ int GPStruct::localIndex(GPNodeStruct* tree) {
   return GI;
 }
 
-int GPStruct::computeSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int maxDepth, bool local) {
-  if (!tree1 || !tree2) return 0;
-  if (maxDepth == 0 && !local) return 0;
+int GPStruct::computeGlobalSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int currentDepth) {
+  if (!tree1 || !tree2 || tree1->isLeaf || tree2->isLeaf) return 0;
+  if (currentDepth >= cutoffDepth) return 0;
 
-  int similarity = 1;
-  if (tree1->value != tree2->value) return 0;
-  if (!local && (tree1->isLeaf || tree2->isLeaf)) {
-    return 0; // global index can't be a leaf
-  }
-
-  if (tree1->isLeaf && tree2->isLeaf) {
-    return 1; // both are leaves and match
-  }
+  int similarity = (tree1->value == tree2->value) ? 1 : 0;
 
   int minChildren = std::min(tree1->children.size(), tree2->children.size());
-  int childSimilarity = 0;
-
   for (int i = 0; i < minChildren; ++i) {
-    if (!tree1->children[i] || !tree2->children[i]) continue;
-    int childMatch = computeSimilarity(tree1->children[i], tree2->children[i], maxDepth - 1, local);
-    childSimilarity += childMatch;
+    similarity += computeGlobalSimilarity(tree1->children[i], tree2->children[i], currentDepth + 1);
   }
-  similarity += childSimilarity;
 
   return similarity;
 }
+
+
+int GPStruct::computeLocalSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int currentDepth) {
+  if (!tree1 || !tree2) return 0;
+
+  int similarity = 0;
+  if (currentDepth >= cutoffDepth && tree1->value == tree2->value) {
+    similarity = 1; // match on value (function or terminal)
+  }
+
+  int minChildren = std::min(tree1->children.size(), tree2->children.size());
+  for (int i = 0; i < minChildren; ++i) {
+    similarity += computeLocalSimilarity(tree1->children[i], tree2->children[i], currentDepth + 1);
+  }
+
+  return similarity;
+}
+
 
 double GPStruct::avgDepth() {
   double sumDepth = 0.0;
@@ -424,10 +425,14 @@ void GPStruct::mutation(const GPNodeStruct& tree) {
 void GPStruct::crossover(GPNodeStruct* tree1, GPNodeStruct* tree2) {
   int x = tree1->treeSize();
   int y = tree2->treeSize();
+
+  if (tree1 == tree2 || x == 0 || y == 0) return; // no crossover
   
   for (int attempt = 0; attempt < 5; attempt++) {
     int t1CP = std::rand() % x;
     int t2CP = std::rand() % y;
+
+    if (t1CP == 0 || t2CP == 0) continue; // skip root node (prevents pointers from being swapped)
     
     GPNodeStruct* temp1 = tree1->traverseToNth(t1CP);
     GPNodeStruct* temp2 = tree2->traverseToNth(t2CP);
@@ -454,11 +459,8 @@ void GPStruct::crossover(GPNodeStruct* tree1, GPNodeStruct* tree2) {
           break;
         }
       }
-
-      std::cout << tree1 << ", " << tree2 << std::endl;
       
-      // Successful crossover
-      return;
+      return; // successful crossover
     }
   }
 }
@@ -496,7 +498,6 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
   for (int i = 0; i < dataset.size(); i++) {
     double treeFitness = 0.0;
     if (recal) {
-      // treeFitness = tree->fitness(dataset[i], colNames);
       treeFitness = tree.fitness(dataset[i], colNames);
     } else {
       // perform a simple lookup to get the value of the tree (saves a lot of time)
@@ -511,7 +512,7 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
     double actual = dataset[i][dataset[0].size() - 1];
 
     // clip with a function to avoid overflow, we want the output to be normalised as well...
-    treeFitness = tanh(treeFitness); // * normalize to [-1, 1]
+    treeFitness = tanh(treeFitness); // * normalize to [-1, 1], intersecting at 0.0
 
     // use threshold to determine if the prediction is correct. If the tree returns 0.0 (false), then it will remain false with the threshold
     if (treeFitness > threshold) {
@@ -547,11 +548,10 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
 double GPStruct::populationFitness() {
   double totalFitness = 0.0;  
   for (int j = 0; j < populationSize; j++) {
-    double f = fitness(*population[j], "train");
-    std::cout << std::to_string(f) << std::endl;
+    double f = currPopFitness[j];
     totalFitness += f;
   }
-  return totalFitness / populationSize;
+  return totalFitness / static_cast<double>(populationSize);
 }
 
 // misc
@@ -560,8 +560,9 @@ GPNodeStruct* GPStruct::getIndividual(const int& index) {
 }
 
 int GPStruct::getIndex(const GPNodeStruct& tree) {
+  const GPNodeStruct* treePtr = &tree;
   for (int i = 0; i < populationSize; i++) {
-    if (population[i] == &tree) {
+    if (population[i] == treePtr) {
       return i;
     }
   }

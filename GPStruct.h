@@ -21,9 +21,9 @@ class GPStruct {
     int tournamentSize;
 
     // for structure-based GP
-    int globalThreshold;
-    int localThreshold;
-    int cutoffDepth;
+    int globalThreshold = 3;
+    int localThreshold = 5;
+    int cutoffDepth = 4;
 
     std::vector<GPNodeStruct*> population;
 
@@ -66,7 +66,8 @@ class GPStruct {
     
     // structure-based GP
     int globalIndex(GPNodeStruct* tree);
-    int computeSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int maxDepth, bool local = false);
+    int computeGlobalSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int currentDepth = 0);
+    int computeLocalSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int currentDepth = 0);
     int localIndex(GPNodeStruct* tree);
     
     // selection method
