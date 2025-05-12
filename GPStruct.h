@@ -20,6 +20,10 @@ class GPStruct {
     int populationSize;
     int tournamentSize;
 
+    // for structure-based GP
+    int cutoffDepth = 4;
+    int globalThreshold = 10;
+
     std::vector<GPNodeStruct*> population;
 
     std::vector<std::vector<double>> training;
@@ -35,9 +39,7 @@ class GPStruct {
     const std::vector<std::string> validUnaryOperators = {"sigmoid", "sin", "cos", "log"}; // [returns float]
     // for structure-based GP, we add conditional operators
     const std::vector<std::string> validLogicalOperators = {"and", "or", "not"}; // [returns boolean]
-    const std::vector<std::string> validConditionalOperators = {"if"}; // [returns float/boolean]
     // params:
-    // if: if(condition, trueBranch, falseBranch) [3]
     // and: and(condition1, condition2) [2]
     // or: or(condition1, condition2) [2]
     // not: not(condition) [1]
@@ -60,7 +62,10 @@ class GPStruct {
     // training & testing
     void train(int run = 0, int gen = 0);
     double test(int run = 0, bool TL = false);
-    double avgDepth();
+    
+    // structure-based GP
+    int globalIndex(GPNodeStruct* tree);
+    int computeSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int maxDepth);
     
     // selection method
     std::vector<GPNodeStruct*> tournamentSelection(bool TL = false);
@@ -75,6 +80,7 @@ class GPStruct {
     double populationFitness();
     
     // misc
+    double avgDepth();
     GPNodeStruct* getIndividual(const int& index);
     int getIndex(const GPNodeStruct& tree);
     void updateFitness(const GPNodeStruct& tree);
@@ -85,6 +91,7 @@ class GPStruct {
     bool isBooleanTerminal(std::string value);
     void printTree(const GPNodeStruct* root, const GPNodeStruct* origin = nullptr, int depth = 0);
     void printTree(const GPNodeStruct& root, int depth = 0);
+    void printPopulation();
 };
 
 #endif // GP_STRUCT_H

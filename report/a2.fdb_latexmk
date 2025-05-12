@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex a2"] 1745357558.80942 "a2.aux" "a2.bbl" "a2" 1745358834.9535 0
-  "./COS710A1.bib" 1745351934.05244 839 26360823d624bc3161754e2eec092afb ""
+["bibtex a2"] 1745357558.80942 "a2.aux" "a2.bbl" "a2" 1747062459.37886 0
+  "./COS710A1.bib" 1746302148.34815 839 26360823d624bc3161754e2eec092afb ""
   "/opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/bibtex/bst/ieeetran/IEEEtran.bst" 1710106625 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "a2.aux" 1745358834.75224 5694 31c1a7c575ad7a07767015a43f9b224e "pdflatex"
+  "a2.aux" 1747062459.15998 5694 31c1a7c575ad7a07767015a43f9b224e "pdflatex"
   (generated)
   "a2.bbl"
   "a2.blg"
   (rewritten before read)
-["pdflatex"] 1745358834.12053 "/Users/iwandejong/University/COS 710/Assignment 2/report/a2.tex" "a2.pdf" "a2" 1745358834.95371 0
-  "/Users/iwandejong/University/COS 710/Assignment 2/report/a2.tex" 1745358833.96198 26390 c4edcb28d93e86a9a16ca5fac5d2b554 ""
+["pdflatex"] 1747062458.45407 "/Users/iwandejong/University/COS 710/Assignment 3/report/a2.tex" "a2.pdf" "a2" 1747062459.37905 0
+  "/Users/iwandejong/University/COS 710/Assignment 3/report/a2.tex" 1746302148.37375 26390 c4edcb28d93e86a9a16ca5fac5d2b554 ""
   "/opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/fonts/enc/dvips/base/8r.enc" 1710106625 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1710106625 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/fonts/map/fontname/texfonts.map" 1710106625 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -73,16 +73,16 @@
   "/opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/tex/latex/tools/array.sty" 1710106625 12667 e4b5eb11e4b7239e6c8a52bbe074a6c6 ""
   "/opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/web2c/texmf.cnf" 1710106625 41652 e14926ab86fde7902cad99d9eeaa5ca5 ""
   "/opt/homebrew/Cellar/texlive/20240312_3/share/texmf-var/web2c/pdftex/pdflatex.fmt" 1710106625 8221850 70c9897997689f17e0fe3af32a6be553 ""
-  "a2.aux" 1745358834.75224 5694 31c1a7c575ad7a07767015a43f9b224e "pdflatex"
-  "a2.bbl" 1745357558.90318 1324 7fd5c0e4ae3ba2ae28debd13776a5d5c "bibtex a2"
-  "a2.tex" 1745358833.96198 26390 c4edcb28d93e86a9a16ca5fac5d2b554 ""
-  "a2.toc" 1745358834.7534 1942 05ff64187443326d10c40f359f79034e "pdflatex"
-  "assets/boxplot.png" 1745321424.96698 14301 e8d4ed4fde025eb7c57b74b00fcc58c3 ""
-  "assets/corr197.png" 1745332780.56733 24610 fb8cd295ae77f65f062164faade203e7 ""
-  "assets/corr227.png" 1745321424.97299 19999 7eadce4629ed1bf491f85e632e336cb3 ""
-  "assets/diversity.png" 1745356836.83576 16289 942f6c3c3eca0d7b7769a8a3c7ff4f26 ""
-  "assets/hist.png" 1745330072.38684 221340 47b475928b0e654a00a00387afc85cac ""
-  "assets/outlierRemoval.png" 1745331092.66206 34370 bf8a34242785d86ae76dee271e1002f3 ""
+  "a2.aux" 1747062459.15998 5694 31c1a7c575ad7a07767015a43f9b224e "pdflatex"
+  "a2.bbl" 1746302148.36415 1324 7fd5c0e4ae3ba2ae28debd13776a5d5c "bibtex a2"
+  "a2.tex" 1746302148.37375 26390 c4edcb28d93e86a9a16ca5fac5d2b554 ""
+  "a2.toc" 1747062459.16098 1942 05ff64187443326d10c40f359f79034e "pdflatex"
+  "assets/boxplot.png" 1746302148.37856 14301 e8d4ed4fde025eb7c57b74b00fcc58c3 ""
+  "assets/corr197.png" 1746302148.37951 24610 fb8cd295ae77f65f062164faade203e7 ""
+  "assets/corr227.png" 1746302148.38045 19999 7eadce4629ed1bf491f85e632e336cb3 ""
+  "assets/diversity.png" 1746302148.38128 16289 942f6c3c3eca0d7b7769a8a3c7ff4f26 ""
+  "assets/hist.png" 1746302148.38457 221340 47b475928b0e654a00a00387afc85cac ""
+  "assets/outlierRemoval.png" 1746302148.38706 34370 bf8a34242785d86ae76dee271e1002f3 ""
   (generated)
   "a2.aux"
   "a2.log"

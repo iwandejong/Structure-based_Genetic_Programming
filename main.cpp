@@ -119,11 +119,20 @@ int main() {
     columnNames.push_back(name.first);
   }
 
-  int populationSize = 100;
-  int maxDepth = 7;
-  int maxGenerations = 500;
+  // setup for normal GP
+  int populationSize = 50;
+  int maxDepth = 6;
+  int maxGenerations = 100;
   std::vector<double> applicationRates = {0.75, 0.05}; // crossoverRate, mutationRate
   int tournamentSize = 4;
+
+  // setup for structure-based GP
+  int populationSizeStruct = 150;
+  int maxDepthStruct = 6;
+  int maxGenerationsStruct = 100;
+  std::vector<double> applicationRatesStruct = {0.70, 0.075}; // crossoverRate, mutationRate
+  int tournamentSizeStruct = 4;
+
   int runs = 10;
   std::vector<GPStruct*> gp_structs;
   std::vector<GP*> gps;
@@ -142,15 +151,15 @@ int main() {
     
     // normal GP
     auto start = std::chrono::high_resolution_clock::now();
-    gps[i] = new GP(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, columnNames, i);
-    gps[i]->cachePopulation(i);
-    gps[i]->train(i);
-    bestFitness[i] = gps[i]->test(i, false);
+    // gps[i] = new GP(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, columnNames, i);
+    // gps[i]->cachePopulation(i);
+    // gps[i]->train(i);
+    // bestFitness[i] = gps[i]->test(i, false);
     auto end = std::chrono::high_resolution_clock::now();
     
     // structure-based GP
     auto start_struct = std::chrono::high_resolution_clock::now();
-    gp_structs[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnTypes, i);
+    gp_structs[i] = new GPStruct(populationSizeStruct, dataset->data, maxGenerationsStruct, maxDepthStruct, applicationRatesStruct, tournamentSizeStruct, dataset->columnTypes, i);
     gp_structs[i]->cachePopulation(i);
     gp_structs[i]->train(i);
     bestFitnessStruct[i] = gp_structs[i]->test(i, false);
@@ -168,7 +177,7 @@ int main() {
 
   // print the results
   std::cout << "Results:" << std::endl;
-  std::cout << "Run\tBest F1\tStruct-F1\tTime\tStructTime" << std::endl;
+  std::cout << "Run\tBest F1\t\tStruct-F1\tTime\tStructTime" << std::endl;
   for (int i = 0; i < runs; i++) {
     std::cout << i+1 << "\t" << bestFitness[i] << "\t" << bestFitnessStruct[i] << "\t" << avgDuration[i] << "\t" << avgDurationStruct[i] << std::endl;
   }

@@ -1,7 +1,7 @@
-PWD /Users/iwandejong/University/COS 710/Assignment 2/report
+PWD /Users/iwandejong/University/COS 710/Assignment 3/report
 INPUT /opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/web2c/texmf.cnf
 INPUT /opt/homebrew/Cellar/texlive/20240312_3/share/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/iwandejong/University/COS 710/Assignment 2/report/a2.tex
+INPUT /Users/iwandejong/University/COS 710/Assignment 3/report/a2.tex
 OUTPUT a2.log
 INPUT /opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/tex/latex/base/article.cls
 INPUT /opt/homebrew/Cellar/texlive/20240312_3/share/texmf-dist/tex/latex/base/article.cls

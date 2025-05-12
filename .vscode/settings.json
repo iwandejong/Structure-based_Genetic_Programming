@@ -51,6 +51,10 @@
     "variant": "cpp",
     "vector": "cpp",
     "algorithm": "cpp",
-    "unordered_set": "cpp"
-  }
+    "unordered_set": "cpp",
+    "ostream": "cpp",
+    "cstddef": "cpp",
+    "tuple": "cpp"
+  },
+  "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

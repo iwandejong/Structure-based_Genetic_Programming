@@ -32,10 +32,6 @@ double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vecto
     double left = children[0]->fitness(inputs, colNames);
     double right = children[1]->fitness(inputs, colNames);
 
-    // const std::vector<std::string> validOperators = {"+", "*", "-", "/", "max", "min"}; // [returns float]
-    // const std::vector<std::string> validUnaryOperators = {"sigmoid", "sin", "cos", "log"}; // [returns float]
-    // const std::vector<std::string> validLogicalOperators = {"and", "or", "not"}; // [returns boolean]
-    // const std::vector<std::string> validComparisonOperators = {"<", ">", "<=", ">=", "==", "!="}; // [returns boolean]
     if (value == "+") {
       result = left + right;
     } else if (value == "-") {
@@ -74,14 +70,6 @@ double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vecto
       result = static_cast<double>(left == right);
     } else if (value == "!=") {
       result = static_cast<double>(left != right);
-    }
-  } else if (children.size() == 3) {
-    bool condition = static_cast<bool>(children[0]->fitness(inputs, colNames)); // attempt to convert to boolean
-    double trueBranch = children[1]->fitness(inputs, colNames);
-    double falseBranch = children[2]->fitness(inputs, colNames);
-
-    if (value == "if") {
-      result = condition ? trueBranch : falseBranch;
     }
   }
   return result;
