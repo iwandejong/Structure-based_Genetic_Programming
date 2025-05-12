@@ -51,6 +51,9 @@ double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vecto
     } else if (value == "cos") {
       result = std::cos(left);
     } else if (value == "log") {
+      if (left <= 0) {
+        return 0.0;
+      }
       result = std::log(left);
     } else if (value == "and") {
       result = static_cast<double>(static_cast<bool>(left) && static_cast<bool>(right));

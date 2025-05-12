@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include "GP.h"
 #include "GPStruct.h"
 #include <vector>
 #include <sstream>
@@ -90,8 +89,7 @@ Dataset* fetchDataset(std::string datasetName) {
 }
 
 int main() {
-  Dataset* dataset = fetchDataset("preprocessing/hepatitis_upsampled.tsv");
-  // Dataset* dataset = fetchDataset("preprocessing/hepatitis_cleaned.tsv");
+  Dataset* dataset = fetchDataset("preprocessing/hepatitis_cleaned.tsv");
 
   if (!dataset) {
     std::cerr << "Failed to load datasets" << std::endl;
@@ -120,22 +118,22 @@ int main() {
   }
 
   // setup for normal GP
-  int populationSize = 50;
+  int populationSize = 15;
   int maxDepth = 6;
-  int maxGenerations = 100;
-  std::vector<double> applicationRates = {0.75, 0.05}; // crossoverRate, mutationRate
-  int tournamentSize = 4;
+  int maxGenerations = 25;
+  std::vector<double> applicationRates = {0.8, 0.18}; // crossoverRate, mutationRate
+  int tournamentSize = 5;
 
   // setup for structure-based GP
-  int populationSizeStruct = 150;
-  int maxDepthStruct = 6;
-  int maxGenerationsStruct = 100;
-  std::vector<double> applicationRatesStruct = {0.70, 0.075}; // crossoverRate, mutationRate
-  int tournamentSizeStruct = 4;
+  int populationSizeStruct = 15;
+  int maxDepthStruct = 10;
+  int maxGenerationsStruct = 10;
+  std::vector<double> applicationRatesStruct = {0.75, 0.25}; // crossoverRate, mutationRate
+  int tournamentSizeStruct = 5;
 
-  int runs = 10;
+  int runs = 1;
+  std::vector<GPStruct*> gps;
   std::vector<GPStruct*> gp_structs;
-  std::vector<GP*> gps;
 
   gps.resize(runs);
   gp_structs.resize(runs);
@@ -151,18 +149,18 @@ int main() {
     
     // normal GP
     auto start = std::chrono::high_resolution_clock::now();
-    // gps[i] = new GP(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, columnNames, i);
+    // gps[i] = new GPStruct(populationSizeStruct, dataset->data, maxGenerationsStruct, maxDepthStruct, applicationRatesStruct, tournamentSizeStruct, dataset->columnTypes, i);
     // gps[i]->cachePopulation(i);
     // gps[i]->train(i);
-    // bestFitness[i] = gps[i]->test(i, false);
+    // bestFitness[i] = gps[i]->test(i);
     auto end = std::chrono::high_resolution_clock::now();
     
     // structure-based GP
     auto start_struct = std::chrono::high_resolution_clock::now();
     gp_structs[i] = new GPStruct(populationSizeStruct, dataset->data, maxGenerationsStruct, maxDepthStruct, applicationRatesStruct, tournamentSizeStruct, dataset->columnTypes, i);
     gp_structs[i]->cachePopulation(i);
-    gp_structs[i]->train(i);
-    bestFitnessStruct[i] = gp_structs[i]->test(i, false);
+    gp_structs[i]->train(i, true);
+    bestFitnessStruct[i] = gp_structs[i]->test(i);
     auto end_struct = std::chrono::high_resolution_clock::now();
     
     std::chrono::duration<double> elapsed = end - start;
@@ -177,13 +175,13 @@ int main() {
 
   // print the results
   std::cout << "Results:" << std::endl;
-  std::cout << "Run\tBest F1\t\tStruct-F1\tTime\tStructTime" << std::endl;
+  std::cout << "Run\tBest BACC\t\tStruct-BACC\tTime\tStructTime" << std::endl;
   for (int i = 0; i < runs; i++) {
     std::cout << i+1 << "\t" << bestFitness[i] << "\t" << bestFitnessStruct[i] << "\t" << avgDuration[i] << "\t" << avgDurationStruct[i] << std::endl;
   }
   std::cout << "___________________" << std::endl;
-  std::cout << "Average Best F1: " << std::accumulate(bestFitness.begin(), bestFitness.end(), 0.0) / runs << std::endl;
-  std::cout << "Average Struct-F1: " << std::accumulate(bestFitnessStruct.begin(), bestFitnessStruct.end(), 0.0) / runs << std::endl;
+  std::cout << "Average Best BACC: " << std::accumulate(bestFitness.begin(), bestFitness.end(), 0.0) / runs << std::endl;
+  std::cout << "Average Struct-BACC: " << std::accumulate(bestFitnessStruct.begin(), bestFitnessStruct.end(), 0.0) / runs << std::endl;
   std::cout << "Average Duration: " << std::accumulate(avgDuration.begin(), avgDuration.end(), 0.0) / runs << " seconds (Total duration: " << std::accumulate(avgDuration.begin(), avgDuration.end(), 0.0) << " seconds)" << std::endl;
   std::cout << "Average Struct Duration: " << std::accumulate(avgDurationStruct.begin(), avgDurationStruct.end(), 0.0) / runs << " seconds (Total duration: " << std::accumulate(avgDurationStruct.begin(), avgDurationStruct.end(), 0.0) << " seconds)" << std::endl;
   std::cout << "___________________" << std::endl;

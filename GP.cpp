@@ -57,16 +57,16 @@ GP::~GP() {
 
 void GP::cachePopulation(int run, bool TL) {
   this->currPopFitness = std::vector<double>(populationSize);
-  double mse_sum = 0.0;
+  double BACC_sum = 0.0;
   for (int i = 0; i < populationSize; i++) {
     double tF = fitness(*population[i], "train", true);
     // double tFtest = fitness(population[i], "test", true);
     double tFtest = 0.0;
     currPopFitness[i] = tF;
-    std::cout << "\033[90m" "Caching Individual " << i+1 << "/" << populationSize << " [MSE: " << std::to_string(tF) << "]" << std::endl << "\033[0m";
-    mse_sum += tF;
+    std::cout << "\033[90m" "Caching Individual " << i+1 << "/" << populationSize << " [BACC: " << std::to_string(tF) << "]" << std::endl << "\033[0m";
+    BACC_sum += tF;
   }
-  std::cout << "\033[31m" << "Initial Generation Complete [Average MSE: " << std::to_string(mse_sum/populationSize) << "]" << std::endl << "\033[0m";
+  std::cout << "\033[31m" << "Initial Generation Complete [Average BACC: " << std::to_string(BACC_sum/populationSize) << "]" << std::endl << "\033[0m";
 }
 
 // initial population
@@ -78,8 +78,7 @@ void GP::generateIndividual(GPNode* root, int maxDepth) {
     root->right = nullptr;
     
     // Generate a random double value between -1 and 1
-    // double newDouble = static_cast<double>(std::rand()) / RAND_MAX * 1.0;
-    double newDouble = static_cast<double>(std::rand()) / RAND_MAX * 1.0 - 0.5;
+    double newDouble = static_cast<double>(std::rand()) / RAND_MAX * 2.0 - 1.0;
     if (root->value == "double") {
       root->value = std::to_string(newDouble);
     }
@@ -196,7 +195,7 @@ double GP::test(int run, bool TL) {
   double treeFitness = fitness(*tree, "test", true);
   // appendToCSV({std::to_string(run),std::to_string(TL ? -2 : -1),std::to_string(-1),std::to_string(treeFitness),std::to_string(-1)});
   // vizTree(tree);
-  std::cout << "Testing Results" << std::endl << "MSE: " << std::to_string(treeFitness) << std::endl;
+  std::cout << "Testing Results" << std::endl << "BACC: " << std::to_string(treeFitness) << std::endl;
 
   return treeFitness;
 }
@@ -247,44 +246,37 @@ void GP::mutation(const GPNode& tree) {
 }
 
 void GP::crossover(const GPNode& tree1, const GPNode& tree2) {
-  // std::cout << "Performing Crossover" << std::endl;
-  // std::cout << "################" << std::endl;
-  // std::cout << (tree1 == tree2) << std::endl;
-  // vizTree(tree1);
-  // vizTree(tree2);
   int x = tree1.treeSize();
   int y = tree2.treeSize();
   
-  int t1CP = std::rand() % x;
-  int t2CP = std::rand() % y;
-  
-  GPNode* temp1 = tree1.traverseToNth(t1CP);
-  GPNode* temp2 = tree2.traverseToNth(t2CP);
-  // vizTree(temp1);
-  // vizTree(temp2);
+  for (int attempt = 0; attempt < 5; attempt++) {
+    int t1CP = std::rand() % x;
+    int t2CP = std::rand() % y;
+    
+    GPNode* temp1 = tree1.traverseToNth(t1CP);
+    GPNode* temp2 = tree2.traverseToNth(t2CP);
 
-  GPNode* tempParent1 = tree1.findParent(temp1);
-  GPNode* tempParent2 = tree2.findParent(temp2);
+    GPNode* tempParent1 = tree1.findParent(temp1);
+    GPNode* tempParent2 = tree2.findParent(temp2);
 
-  if (!tempParent1 || !tempParent2 || temp1 == temp2) return;
-  
-  if (tempParent1) {
-    if (tempParent1->left == temp1) {
-      tempParent1->left = temp2;
-    } else {
-      tempParent1->right = temp2;
+    if (!tempParent1 || !tempParent2 || temp1 == temp2) continue;
+    
+    if (tempParent1) {
+      if (tempParent1->left == temp1) {
+        tempParent1->left = temp2;
+      } else {
+        tempParent1->right = temp2;
+      }
+    }
+
+    if (tempParent2) {
+      if (tempParent2->left == temp2) {
+        tempParent2->left = temp1;
+      } else {
+        tempParent2->right = temp1;
+      }
     }
   }
-
-  if (tempParent2) {
-    if (tempParent2->left == temp2) {
-      tempParent2->left = temp1;
-    } else {
-      tempParent2->right = temp1;
-    }
-  }
-  // vizTree(tree1);
-  // std::cout << "################" << std::endl;
 }
 
 // metrics
@@ -297,13 +289,13 @@ GPNode* GP::bestTree() {
       bestFitness = tF;
       currBestTree = population[i];
     }
-    // std::cout << "Individual " << i+1 << "/" << populationSize << " [MSE: " << std::to_string(tF) << "]" <<  std::endl;
+    // std::cout << "Individual " << i+1 << "/" << populationSize << " [BACC: " << std::to_string(tF) << "]" <<  std::endl;
   }
   return currBestTree;
 }
 
 double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
-  double F1 = 0.0;
+  double BACC = 0.0;
   double threshold = 0.0;
   double confusionMatrix[2][2] = {0.0}; // TP, TN, FP, FN
 
@@ -329,7 +321,7 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
 
     if (std::isnan(treeFitness) || std::isinf(treeFitness)) {
       std::cerr << "Invalid fitness value" << std::endl;
-      return 0.0; // bad F1-score
+      return 0.0; // bad BACC-score
     }
 
     double actual = dataset[i][dataset[0].size() - 1];
@@ -355,24 +347,17 @@ double GP::fitness(const GPNode& tree, const std::string& set, bool recal) {
       confusionMatrix[1][1] += 1.0; // TN
     }
   }
-
-  if (confusionMatrix[0][0] + confusionMatrix[0][1] == 0 || confusionMatrix[0][0] + confusionMatrix[1][0] == 0) {
+  
+  if (confusionMatrix[1][1] + confusionMatrix[0][1] == 0 || confusionMatrix[0][0] + confusionMatrix[1][0] == 0) {
     // std::cerr << "Invalid confusion matrix" << std::endl;
     return 0.0; // avoid division by zero
   }
-  
-  // calculate the precision and recall
-  double precision = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[0][1]);
-  double recall = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[1][0]);
 
-  if (precision + recall == 0) {
-    // std::cerr << "Invalid precision and recall" << std::endl;
-    return 0.0; // avoid division by zero
-  }
-
-  double f1 = 2 * (precision * recall) / (precision + recall);
-
-  return f1; // * maximize fitness
+  // calculate BACC
+  double specificity = confusionMatrix[1][1] / (confusionMatrix[1][1] + confusionMatrix[0][1]); // TN / (TN + FP)
+  double sensitivity = confusionMatrix[0][0] / (confusionMatrix[0][0] + confusionMatrix[1][0]); // TP / (TP + FN)
+  double bacc = (sensitivity + specificity) / 2.0;
+  return bacc; // * maximize fitness
 }
 
 double GP::populationFitness() {
