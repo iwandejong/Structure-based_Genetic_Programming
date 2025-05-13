@@ -67,13 +67,14 @@ class GPStruct {
     double test(int run = 0);
     
     // structure-based GP
+    void setParameters(int globalThreshold, int localThreshold, int cutoffDepth);
     int globalIndex(GPNodeStruct* tree);
     int computeGlobalSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int currentDepth = 0);
     int computeLocalSimilarity(GPNodeStruct* tree1, GPNodeStruct* tree2, int currentDepth = 0);
     int localIndex(GPNodeStruct* tree);
     
     // selection method
-    std::vector<GPNodeStruct*> tournamentSelection();
+    std::vector<GPNodeStruct*> tournamentSelection(bool inverse = false);
     
     // genetic operators
     void mutation(const GPNodeStruct& tree);

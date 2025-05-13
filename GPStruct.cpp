@@ -229,8 +229,18 @@ void GPStruct::train(int run, bool structureBased) {
       action = 2;
     }
 
+    std::vector<GPNodeStruct*> losers = tournamentSelection(true);
+
     int i1 = getIndex(*parents[0]);
     int i2 = getIndex(*parents[1]);
+
+    int l1 = getIndex(*losers[0]);
+    int l2 = getIndex(*losers[1]);
+
+    // print fitness of winners and losers
+    std::cout << "\033[90m" "Winner 1: " << currPopFitness[i1] << ", Winner 2: " << currPopFitness[i2] << std::endl;
+    std::cout << "\033[90m" "Loser 1: " << currPopFitness[l1] << ", Loser 2: " << currPopFitness[l2] << std::endl << "\033[0m";
+
     if (structureBased) {
       // compute Global Index (GI)
       int GI1 = globalIndex(parents[0]);
@@ -246,7 +256,7 @@ void GPStruct::train(int run, bool structureBased) {
       if (isGlobalSearch) {
         // ! Global search
         if (GI1 < globalThreshold) {
-          population[i1] = parents[0];
+          losers[0] = parents[0];
           updateFitness(*population[i1]);
           std::cout << "\033[35m" "APPROVED P1 (Global)" << std::endl << "\033[0m";
           
@@ -255,7 +265,7 @@ void GPStruct::train(int run, bool structureBased) {
         }
         
         if (GI2 < globalThreshold) {
-          population[i2] = parents[1];
+          losers[1] = parents[1];
           updateFitness(*population[i2]);
           std::cout << "\033[35m" "APPROVED P2 (Global)" << std::endl << "\033[0m";
           
@@ -265,7 +275,7 @@ void GPStruct::train(int run, bool structureBased) {
       } else {
         // ! Local search
         if (LI1 < localThreshold) {
-          population[i1] = parents[0];
+          losers[0] = parents[0];
           updateFitness(*population[i1]);
           std::cout << "\033[35m" "APPROVED P1 (Local)" << std::endl << "\033[0m";
         } else {
@@ -274,7 +284,7 @@ void GPStruct::train(int run, bool structureBased) {
         }
         
         if (LI2 < localThreshold) {
-          population[i2] = parents[1];
+          losers[1] = parents[1];
           updateFitness(*population[i2]);
           std::cout << "\033[35m" "APPROVED P2 (Local)" << std::endl << "\033[0m";
         } else {
@@ -283,8 +293,8 @@ void GPStruct::train(int run, bool structureBased) {
         }
       }
     } else {
-      population[i1] = parents[0];
-      population[i2] = parents[1];
+      losers[0] = parents[0];
+      losers[1] = parents[1];
 
       currPopFitness[i1] = fitness(*population[i1], "train", true); // recalculate fitness
       currPopFitness[i2] = fitness(*population[i2], "train", true); // recalculate fitness
@@ -305,6 +315,12 @@ void GPStruct::train(int run, bool structureBased) {
     // 5 : select parents for next generation
     parents = tournamentSelection();
   }
+}
+
+void GPStruct::setParameters(int globalThreshold, int localThreshold, int cutoffDepth) {
+  this->globalThreshold = globalThreshold;
+  this->localThreshold = localThreshold;
+  this->cutoffDepth = cutoffDepth;
 }
 
 bool GPStruct::isNodeAboveCutoff(const GPNodeStruct& node) {
@@ -408,7 +424,7 @@ double GPStruct::test(int run) {
 }
 
 // selection method
-std::vector<GPNodeStruct*> GPStruct::tournamentSelection() {
+std::vector<GPNodeStruct*> GPStruct::tournamentSelection(bool inverse) {
   std::vector<GPNodeStruct*> newPopulation(tournamentSize);
   std::vector<int> selectedIndices;
 
@@ -426,11 +442,11 @@ std::vector<GPNodeStruct*> GPStruct::tournamentSelection() {
       selectedIndices.push_back(randomIndividual);
     }
     
-    GPNodeStruct* winner = tempPopulation[0];
-    double wF = currPopFitness[initialRandom];
+    GPNodeStruct* winner = nullptr;
+    double wF = inverse ? INFINITY : -INFINITY;
     for (int i = 0; i < tournamentSize; i++) {
       double tF = fitness(*tempPopulation[i], "train");
-      if (tF > wF) { // * maximize fitness
+      if (inverse ? tF < wF : tF > wF) {
         winner = tempPopulation[i];
         wF = tF;
       }
@@ -552,12 +568,12 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set, bool 
 
   for (int i = 0; i < dataset.size(); i++) {
     double treeFitness = 0.0;
-    if (recal) {
+    // if (recal) {
       treeFitness = tree.fitness(dataset[i], colNames);
-    } else {
+    // } else {
       // perform a simple lookup to get the value of the tree (saves a lot of time)
-      treeFitness = currPopFitness[getIndex(tree)];
-    }
+      // treeFitness = currPopFitness[getIndex(tree)];
+    // }
 
     if (std::isnan(treeFitness) || std::isinf(treeFitness)) {
       std::cerr << "Invalid fitness value" << std::endl;

@@ -118,20 +118,20 @@ void run() {
   }
 
   // setup for normal GP
-  int populationSize = 100;
-  int maxDepth = 5; // initial depth, can grow indefinitely
-  int maxGenerations = 250;
-  std::vector<double> applicationRates = {0.66, 0.25}; // crossoverRate, mutationRate
-  int tournamentSize = 4;
+  int populationSize = 50;
+  int maxDepth = 6; // initial depth, can grow indefinitely
+  int maxGenerations = 30;
+  std::vector<double> applicationRates = {0.6, 0.25}; // crossoverRate, mutationRate
+  int tournamentSize = 5;
 
   // setup for structure-based GP
-  int populationSizeStruct = 75;
+  int populationSizeStruct = 50;
   int maxDepthStruct = 5; // initial depth, can grow indefinitely
-  int maxGenerationsStruct = 250;
-  std::vector<double> applicationRatesStruct = {0.75, 0.15}; // crossoverRate, mutationRate
-  int tournamentSizeStruct = 4;
+  int maxGenerationsStruct = 70;
+  std::vector<double> applicationRatesStruct = {0.7, 0.1}; // crossoverRate, mutationRate
+  int tournamentSizeStruct = 5;
 
-  int runs = 4;
+  int runs = 10;
   std::vector<GPStruct*> gps;
   std::vector<GPStruct*> gp_structs;
 
@@ -149,10 +149,10 @@ void run() {
     
     // normal GP
     auto start = std::chrono::high_resolution_clock::now();
-    // gps[i] = new GPStruct(populationSizeStruct, dataset->data, maxGenerationsStruct, maxDepthStruct, applicationRatesStruct, tournamentSizeStruct, dataset->columnTypes, i);
-    // gps[i]->cachePopulation(i);
-    // gps[i]->train(i);
-    // bestFitness[i] = gps[i]->test(i);
+    gps[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnTypes, i);
+    gps[i]->cachePopulation(i);
+    gps[i]->train(i);
+    bestFitness[i] = gps[i]->test(i);
     auto end = std::chrono::high_resolution_clock::now();
     
     // structure-based GP

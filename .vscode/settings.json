@@ -55,7 +55,8 @@
     "ostream": "cpp",
     "cstddef": "cpp",
     "tuple": "cpp",
-    "__config": "cpp"
+    "__config": "cpp",
+    "chrono": "cpp"
   },
   "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }
