@@ -22,8 +22,10 @@ class GPStruct {
 
     // for structure-based GP
     int globalThreshold = 3;
-    int localThreshold = 5;
+    int localThreshold = 3;
     int cutoffDepth = 4;
+    bool isGlobalSearch = true;
+    bool isNodeAboveCutoff(const GPNodeStruct& node);
 
     std::vector<GPNodeStruct*> population;
 
@@ -37,7 +39,7 @@ class GPStruct {
     std::vector<std::string> validBooleanTerminals = {}; // [is a boolean]
 
     const std::vector<std::string> validOperators = {"+", "*", "-", "/", "max", "min"}; // [returns float]
-    const std::vector<std::string> validUnaryOperators = {"sigmoid", "sin", "cos", "log"}; // [returns float]
+    const std::vector<std::string> validUnaryOperators = {"tanh", "sin", "cos", "log"}; // [returns float]
     // for structure-based GP, we add conditional operators
     // const std::vector<std::string> validLogicalOperators = {"and", "or", "not"}; // [returns boolean]
     // params:

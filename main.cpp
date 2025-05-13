@@ -88,12 +88,12 @@ Dataset* fetchDataset(std::string datasetName) {
   return ds;
 }
 
-int main() {
+void run() {
   Dataset* dataset = fetchDataset("preprocessing/hepatitis_cleaned.tsv");
 
   if (!dataset) {
     std::cerr << "Failed to load datasets" << std::endl;
-    return 1;
+    return;
   }
 
   std::ofstream file("outputs.csv", std::ios::trunc);
@@ -118,20 +118,20 @@ int main() {
   }
 
   // setup for normal GP
-  int populationSize = 15;
-  int maxDepth = 12;
-  int maxGenerations = 25;
-  std::vector<double> applicationRates = {0.8, 0.18}; // crossoverRate, mutationRate
-  int tournamentSize = 5;
+  int populationSize = 100;
+  int maxDepth = 5; // initial depth, can grow indefinitely
+  int maxGenerations = 250;
+  std::vector<double> applicationRates = {0.66, 0.25}; // crossoverRate, mutationRate
+  int tournamentSize = 4;
 
   // setup for structure-based GP
-  int populationSizeStruct = 150;
-  int maxDepthStruct = 8;
-  int maxGenerationsStruct = 300;
-  std::vector<double> applicationRatesStruct = {0.55, 0.25}; // crossoverRate, mutationRate
-  int tournamentSizeStruct = 5;
+  int populationSizeStruct = 75;
+  int maxDepthStruct = 5; // initial depth, can grow indefinitely
+  int maxGenerationsStruct = 250;
+  std::vector<double> applicationRatesStruct = {0.75, 0.15}; // crossoverRate, mutationRate
+  int tournamentSizeStruct = 4;
 
-  int runs = 10;
+  int runs = 4;
   std::vector<GPStruct*> gps;
   std::vector<GPStruct*> gp_structs;
 
@@ -175,9 +175,9 @@ int main() {
 
   // print the results
   std::cout << "Results:" << std::endl;
-  std::cout << "Run\tBest BACC\t\tStruct-BACC\tTime\tStructTime" << std::endl;
+  std::cout << "Run\tBest BACC\tStruct-BACC\tTime\tStructTime" << std::endl;
   for (int i = 0; i < runs; i++) {
-    std::cout << i+1 << "\t" << bestFitness[i] << "\t" << bestFitnessStruct[i] << "\t" << avgDuration[i] << "\t" << avgDurationStruct[i] << std::endl;
+    std::cout << i+1 << "\t" << std::to_string(bestFitness[i]) << "\t" << std::to_string(bestFitnessStruct[i]) << "\t" << std::to_string(avgDuration[i]) << "\t" << std::to_string(avgDurationStruct[i]) << std::endl;
   }
   std::cout << "___________________" << std::endl;
   std::cout << "Average Best BACC: " << std::accumulate(bestFitness.begin(), bestFitness.end(), 0.0) / runs << std::endl;
@@ -189,6 +189,9 @@ int main() {
   for (int i = 0; i < runs; i++) {
     delete gps[i];
   }
+}
 
+int main() {
+  run();
   return 0;
 }

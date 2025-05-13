@@ -44,8 +44,9 @@ double GPNodeStruct::fitness(const std::vector<double>& inputs, const std::vecto
       result = std::max(left, right);
     } else if (value == "min") {
       result = std::min(left, right);
-    } else if (value == "sigmoid") {
-      result = 1.0 / (1.0 + std::exp(-left));
+    } else if (value == "tanh") {
+      // result = 1.0 / (1.0 + std::exp(-left));
+      result = std::tanh(left);
     } else if (value == "sin") {
       result = std::sin(left);
     } else if (value == "cos") {
