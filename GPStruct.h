@@ -21,9 +21,9 @@ class GPStruct {
     int tournamentSize;
 
     // for structure-based GP
-    int globalThreshold = 3;
-    int localThreshold = 3;
-    int cutoffDepth = 4;
+    int globalThreshold = 6;
+    int localThreshold = 8;
+    int cutoffDepth = 5;
     bool isGlobalSearch = true;
     bool isNodeAboveCutoff(const GPNodeStruct& node);
 
@@ -82,7 +82,7 @@ class GPStruct {
     
     // metrics
     GPNodeStruct* bestTree();
-    double fitness(const GPNodeStruct& tree, const std::string& set, bool recal = false);
+    double fitness(const GPNodeStruct& tree, const std::string& set);
     double populationFitness();
     
     // misc

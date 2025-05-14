@@ -127,8 +127,8 @@ void run() {
   // setup for structure-based GP
   int populationSizeStruct = 50;
   int maxDepthStruct = 5; // initial depth, can grow indefinitely
-  int maxGenerationsStruct = 70;
-  std::vector<double> applicationRatesStruct = {0.7, 0.1}; // crossoverRate, mutationRate
+  int maxGenerationsStruct = 75;
+  std::vector<double> applicationRatesStruct = {0.75, 0.1}; // crossoverRate, mutationRate
   int tournamentSizeStruct = 5;
 
   int runs = 10;
