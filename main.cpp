@@ -100,16 +100,8 @@ void run() {
   if (!file.is_open()) {
     std::cerr << "Failed to open outputs.csv" << std::endl;
   }
-  // V({std::to_string(run),std::to_string(i+gen),std::to_string(popFitness),std::to_string(bTF),std::to_string(action)});
-  file << "run,generation,populationFitness,bestTree,action" << std::endl;
+  file << "run,generation,populationFitness,bestTree,action,structured" << std::endl;
   file.close();
-
-  std::ofstream file2("diversity.csv", std::ios::trunc);
-  if (!file2.is_open()) {
-    std::cerr << "Failed to open diversity.csv" << std::endl;
-  }
-  file2 << "generation,individual,TL" << std::endl;
-  file2.close();
 
   // still store column names
   std::vector<std::string> columnNames;
@@ -118,18 +110,18 @@ void run() {
   }
 
   // setup for normal GP
-  int populationSize = 50;
-  int maxDepth = 6; // initial depth, can grow indefinitely
-  int maxGenerations = 30;
+  int populationSize = 35;
+  int maxDepth = 7; // initial depth, can grow indefinitely
+  int maxGenerations = 70;
   std::vector<double> applicationRates = {0.6, 0.25}; // crossoverRate, mutationRate
-  int tournamentSize = 5;
+  int tournamentSize = 7;
 
   // setup for structure-based GP
-  int populationSizeStruct = 50;
-  int maxDepthStruct = 5; // initial depth, can grow indefinitely
-  int maxGenerationsStruct = 75;
-  std::vector<double> applicationRatesStruct = {0.75, 0.1}; // crossoverRate, mutationRate
-  int tournamentSizeStruct = 5;
+  int populationSizeStruct = 35;
+  int maxDepthStruct = 6; // initial depth, can grow indefinitely
+  int maxGenerationsStruct = 110;
+  std::vector<double> applicationRatesStruct = {0.5, 0.25}; // crossoverRate, mutationRate
+  int tournamentSizeStruct = 7;
 
   int runs = 10;
   std::vector<GPStruct*> gps;
@@ -150,7 +142,6 @@ void run() {
     // normal GP
     auto start = std::chrono::high_resolution_clock::now();
     gps[i] = new GPStruct(populationSize, dataset->data, maxGenerations, maxDepth, applicationRates, tournamentSize, dataset->columnTypes, i);
-    gps[i]->cachePopulation(i);
     gps[i]->train(i);
     bestFitness[i] = gps[i]->test(i);
     auto end = std::chrono::high_resolution_clock::now();
@@ -158,7 +149,6 @@ void run() {
     // structure-based GP
     auto start_struct = std::chrono::high_resolution_clock::now();
     gp_structs[i] = new GPStruct(populationSizeStruct, dataset->data, maxGenerationsStruct, maxDepthStruct, applicationRatesStruct, tournamentSizeStruct, dataset->columnTypes, i);
-    gp_structs[i]->cachePopulation(i);
     gp_structs[i]->train(i, true);
     bestFitnessStruct[i] = gp_structs[i]->test(i);
     auto end_struct = std::chrono::high_resolution_clock::now();
@@ -175,7 +165,7 @@ void run() {
 
   // print the results
   std::cout << "Results:" << std::endl;
-  std::cout << "Run\tBest BACC\tStruct-BACC\tTime\tStructTime" << std::endl;
+  std::cout << "Run\tBest BACC\tStruct-BACC\tTime\t\tStructTime" << std::endl;
   for (int i = 0; i < runs; i++) {
     std::cout << i+1 << "\t" << std::to_string(bestFitness[i]) << "\t" << std::to_string(bestFitnessStruct[i]) << "\t" << std::to_string(avgDuration[i]) << "\t" << std::to_string(avgDurationStruct[i]) << std::endl;
   }

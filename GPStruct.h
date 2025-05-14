@@ -23,9 +23,11 @@ class GPStruct {
     // for structure-based GP
     int globalThreshold = 6;
     int localThreshold = 8;
-    int cutoffDepth = 5;
+    int cutoffDepth = 4;
     bool isGlobalSearch = true;
     bool isNodeAboveCutoff(const GPNodeStruct& node);
+
+    int booleanRandomizer = 4;
 
     std::vector<GPNodeStruct*> population;
 
@@ -49,8 +51,6 @@ class GPStruct {
     const std::vector<std::string> validComparisonOperators = {"<", ">", "<=", ">=", "==", "!="}; // [returns boolean]
 
     std::vector<std::string> colNames;
-
-    std::vector<double> currPopFitness;
     
   public:
     GPStruct(int populationSize, std::vector<std::vector<double>> dataset, int gen, int depth, std::vector<double> aR, int tournamentSize, std::vector<std::pair<std::string, int>> columnTypes, int seed = 0);
@@ -60,7 +60,6 @@ class GPStruct {
     void generateIndividual(GPNodeStruct* root, int maxDepth, bool logical);
     std::string randomTerminal(bool parentRequiresBoolean);
     std::string randomOperator(bool isConditional = false);
-    void cachePopulation(int run);
 
     // training & testing
     void train(int run = 0, bool structureBased = false);
@@ -89,10 +88,8 @@ class GPStruct {
     double avgDepth();
     GPNodeStruct* getIndividual(const int& index);
     int getIndex(const GPNodeStruct& tree);
-    void updateFitness(const GPNodeStruct& tree);
     void appendToCSV(std::vector<std::string> input);
     int requiredOperands(std::string value);
-    bool isBooleanParent(std::string value);
     int nodeLevel(GPNodeStruct* root, GPNodeStruct* targetNode);
     bool isBooleanTerminal(std::string value);
     void printTree(const GPNodeStruct* root, const GPNodeStruct* origin = nullptr, int depth = 0);

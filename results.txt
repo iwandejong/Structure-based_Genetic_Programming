@@ -1,0 +1,21 @@
+Normal GP for run 10 completed in 35.4605 seconds
+Structure-based GP for run 10 completed in 70.7697 seconds
+___________________
+Results:
+Run     Best BACC       Struct-BACC     Time            StructTime
+1       0.711310        0.782738        119.006331      95.738877
+2       0.803571        0.729167        74.595315       43.671835
+3       0.660326        0.785326        86.282625       47.741771
+4       0.673333        0.796667        53.342878       49.912454
+5       0.907407        0.708333        83.262267       54.219468
+6       0.761538        0.884615        82.709071       39.851685
+7       0.750000        0.892857        112.036294      52.620461
+8       0.638889        0.833333        105.896781      48.184486
+9       0.732143        0.782738        92.746339       43.216493
+10      0.590000        0.656667        35.460452       70.769725
+___________________
+Average Best BACC: 0.722852
+Average Struct-BACC: 0.785244
+Average Duration: 84.5338 seconds (Total duration: 845.338 seconds)
+Average Struct Duration: 54.5927 seconds (Total duration: 545.927 seconds)
+___________________
