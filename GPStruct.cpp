@@ -282,9 +282,8 @@ void GPStruct::train(int run, bool structureBased) {
     double popFitness = populationFitness();
     std::cout << "\033[90m" "Population Fitness: " << std::to_string(popFitness) << std::endl << "\033[0m";
     double bTF = fitness(*bestTree(), "train");
-    // double bTFtest = fitness(bestTree(), "test", true);
     double bTFtest = 0.0;
-    appendToCSV({std::to_string(run),std::to_string(i),std::to_string(popFitness),std::to_string(bTF),std::to_string(action),std::to_string(structureBased)});
+    appendToCSV({std::to_string(run),std::to_string(i),std::to_string(popFitness),std::to_string(bTF),std::to_string(action),structureBased ? "1" : "0"});
 
     std::string colorAction = action == 0 ? "\033[91m" : action == 1 ? "\033[92m" : "\033[93m";
     std::string printAction = action == 0 ? "Reproduction" : action == 1 ? "Crossover" : "Mutation";
@@ -396,7 +395,6 @@ double GPStruct::test(int run) {
     return -1.0;
   }
   double treeFitness = fitness(*tree, "test");
-  // vizTree(tree);
   std::cout << "Testing Results" << std::endl << "BACC: " << std::to_string(treeFitness) << std::endl;
 
   return treeFitness;

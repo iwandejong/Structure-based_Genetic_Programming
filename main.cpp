@@ -164,7 +164,7 @@ void run() {
   }
 
   // print the results
-  std::cout << "Results:" << std::endl;
+  std::cout << "Testing Results:" << std::endl;
   std::cout << "Run\tBest BACC\tStruct-BACC\tTime\t\tStructTime" << std::endl;
   for (int i = 0; i < runs; i++) {
     std::cout << i+1 << "\t" << std::to_string(bestFitness[i]) << "\t" << std::to_string(bestFitnessStruct[i]) << "\t" << std::to_string(avgDuration[i]) << "\t" << std::to_string(avgDurationStruct[i]) << std::endl;
