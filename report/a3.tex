@@ -38,14 +38,14 @@ University of Pretoria}
 \newpage
 
 \section{Running Instructions}
-To run the GP, made with C++, a \texttt{makefile} is included as part of the submission. You can use the following commands in the directory to run the GP:
+To run the GP, made with C++, a \texttt{makefile} is included as part of the submission. The following commands in the directory can be used to run the GP:
 
 \begin{verbatim}
   make
   make run
 \end{verbatim}
 
-Since architectures may vary, the following can be commands can also be used to (hopefully) run the GP when \texttt{clang} is installed: 
+Since architectures may vary, the following can be commands can also be used to (hopefully) run the GP when \texttt{clang} is installed:
 
 \begin{verbatim}
   make alt
@@ -112,7 +112,7 @@ To improve the performance of the GP during runtime, C++'s pass by reference abi
 
 \section{GP Technical Specification}
 \subsection{GP Setup}
-Both the SBGP and the NGP followed the same setup apart from small alterations in some parts of the setup when needed for the SBGP. This allowed to work from the same GP implementation, reducing the codebase footprint.
+Both the SBGP and the NGP followed the same setup apart from small alterations in some parts of the setup when needed for the SBGP. This allowed to work from the same GP implementation, reducing the overall code footprint.
 \subsubsection{Control Model}
 \label{steadyState}
 To control the population of both the NGP and SBGP, a \textbf{steady-state control model (SSCM)} has been employed:
@@ -134,12 +134,10 @@ To control the population of both the NGP and SBGP, a \textbf{steady-state contr
 \end{tabularx}
 \end{table}
 
-With SSCM, a fixed population size is maintained throughout the run where the offspring replaces individuals with poor fitness. The method to select the worst individuals is described in Section \ref{selection}.
-
-\textbf{Add reasoning... Why did you choose this?}
+With SSCM, a fixed population size is maintained throughout the run where the offspring replaces individuals with poor fitness. The method to select the worst individuals is described in Section \ref{selection}. By replacing the worst individuals, top-performing individuals are preserved. This helps with steady convergence. On the other hand, a generational control model could potentially disrupt those individuals if no mechanism is put in place.
 
 \subsubsection{Structure-based GP (SBGP) Specification}
-To implement SBGP, a similar approach has been followed to ISBGP-II, as proposed by Kapoor and Pillay \cite{kapoor_genetic_2024}. By using similarity indices, it is possible for the GP to escape local optima and control exploitation and exploration. \textbf{Add reasoning... Why did you choose this?} The SSCM model (Section \ref{steadyState}) is modified for SBGP as follows:
+To implement SBGP, a similar approach has been followed to ISBGP-II, as proposed by Kapoor and Pillay \cite{kapoor_genetic_2024}. This specific structure-based approach employs global and local similarity indices to adjust the search strategy. Global search allows for wider exploration, while the indication of a promising individual further exploits the program. Once local search fails it returns to global search. This essentially escapes local optima. The SSCM model (Section \ref{steadyState}) is modified for SBGP as follows:
 \begin{table}[H]
 \centering
 \begin{tabularx}{\textwidth}{X}
@@ -203,42 +201,40 @@ For the selection method, a tried-and-trusted tournament selection has been used
 
 To select individuals with poor fitness, \textbf{inverse tournament selection} has also been employed to find the two worst candidates to be replaced with the offspring.
 
-\textbf{Add reasoning... Why did you choose this?}
+Tournament selection was chosen to offer a balance between exploitation and exploration. It's also computationally efficient, since only the fitness of a few individuals in the population have to be calculated.
 
 \subsubsection{Mutation}
 For the mutation genetic operator, a mix of approaches has been followed to ensure maximum diversity. A random point in the tree is chosen, and a random subtree (possibly just a leaf node) is generated and the subtree is replaced. This ensures that both grow and shrink mutation is possible with this approach. The mutation operator also employed point mutation (50\% chance), which replaced the node with a terminal or a function, depending on it's position.
 
 The root node is also replacable, but because \texttt{rand() mod maxDepth} is passed as parameter, it becomes possible to penalise bigger trees, by generating a new smaller tree (i.e. the root is replaced by a smaller tree). Having a replacable root node is potentially harmful to the individual, but no notable problems have been picked up.
 
-or SBGP, if the mutation point was above the cutoff depth during local search, mutation was skipped.
+For SBGP, if the mutation point was above the cutoff depth during local search, mutation was skipped.
 
-\textbf{Add reasoning... Why did you choose this?}
+The combination of subtree and point mutation offers multiple ways to explore new regions. Mutation is a good genetic operator to bring in completely new elements to the program space.
 
 \subsubsection{Crossover}
 The crossover operator takes a standard approach by selecting random points in each of the two parents, and then swaps them around to produce offspring. The root nodes can't be swapped, because pointers would then be swopped, which caused upstream problems when replacing offspring with the losers.
 
 For SBGP, if any of the crossover points were above the cutoff depth during local search, the crossover attempt was cancelled. However, a retry mechanism was added to attempt other points in the tree to apply crossover to.
 
-\textbf{Add reasoning... Why did you choose this?}
+Crossover offers the opportunity to swop partially good solutions with each other in the program space. Moreover, the offspring are generally fit as their parents are fit as well. Crossover is a good choice for protecting good solutions, and seeking a solution that is potentially better.
 
 \subsubsection{Reproduction}
-The selected individuals remains unchanged and is carried over to the next generation. In the codebase, the reproduction rate is calculated as \(1-C_r-M_r\) where \(C_r\) is crossover rate and \(M_r\) is mutation rate.
-
-\textbf{Add reasoning... Why did you choose this?}
+The selected individuals remains unchanged and is carried over to the next generation. In the codebase, the reproduction rate is calculated as \(1.0-C_r-M_r\) where \(C_r\) is crossover rate and \(M_r\) is mutation rate. Reproduction helps to preserve fit individuals.
 
 \subsubsection{Stopping Criteria}
 For the stopping criterion, every GP run completed the full amount of generations (i.e. \texttt{maxGenerations}). No experimentation with early stopping or convergence testing has been done in this assignment. The final result were used to understand where the best convergence point were for multiple generations. Experiments with different \texttt{maxGenerations} has been done to see which one performs best.
 
-\textbf{Add reasoning... Why did you choose this?}
+Fixing the number of generations ensures that runs can converge sufficiently, whereas early stopping could potentially accept an average solution over a better solution.
 
 \subsection{Fitness Function: BACC}
 \label{fitness}
-To evaluate the performance of the GP, Balanced Accuracy (BACC) has been used as the \texttt{fitness()}-function. \textbf{Add reasoning... Why did you choose this?} The BACC function can be defined as follows:
+To evaluate the performance of the GP, Balanced Accuracy (BACC) has been used as the \texttt{fitness()}-function. BACC works well for datasets that are imbalanced by making sure that both positive and negative classes are weighted equally. Sensitivity accounts for the positive classes whereas specificity caters for the negative classes. The average between these two are taken and is be defined as follows:
 \begin{equation}\label{BACC}
   BACC = \frac{\text{specificity} + \text{sensitivity}}{2.0}
 \end{equation}
 
-where \(\text{specificity} = \frac{TN}{TN + FP}\) and \(\text{sensitivity} = \frac{TP}{TP + FN}\). If \(TP + FN = 0\) or \(TN + FP = 0\), a bad fitness of \(0.0\) was returned.
+where \(\text{specificity} = \frac{TN}{TN + FP}\) and \(\text{sensitivity} = \frac{TP}{TP + FN}\). If \(TP + FN = 0.0\) or \(TN + FP = 0.0\), a bad fitness of \(0.0\) was returned.
 
 To ensure the threshold can be applied when calculating BACC, the \(tanh\) function was used to ensure the output resides around \(0.0\):
 \begin{equation}\label{eq:sigmoid}
@@ -256,8 +252,6 @@ Because the \(tanh\) function outputs continuous values, a clipping mechamism wa
 \end{equation}
 where the threshold were set to 0.0. If the tree output was 0.0 (i.e. die) then \(tanh(0) = 0\).
 
-\textbf{Add reasoning... Why did you choose this?}
-
 \section{Parameters and Results}
 \label{GPsetup}
 The parameters were manually tuned to achieve optimal performance. A wide range of variables have been experimented with. Reasoning have been provided next to each parameter.
@@ -266,7 +260,7 @@ The parameters were manually tuned to achieve optimal performance. A wide range 
 After fine-tuning the parameters, the following NGP parameter setup is used:
 \begin{itemize}
   \item Population size: \textbf{35} \emph{(Greater population size led to increased runtime with minimal performance improvements.)}
-  \item Number of generations: \textbf{70} \emph{(A greater number of generations led to increased runtime with minimal performance improvements (already converged).)}
+  \item Number of generations: \textbf{70} \emph{(A greater number of generations led to increased runtime. The GP already converged and didn't notably impact the results.)}
   \item Crossover rate: \textbf{0.6} \emph{(Higher crossover rates reduced convergence. A reasonably low crossover rate helped for convergence.)}
   \item Mutation rate: \textbf{0.25} \emph{(A high mutation rate was selected to allow the model to naturally escape local optima.)}
   \item Reproduction rate: \textbf{0.15} \emph{(The reproduction rate was simply a fallback and simply transfers the parents to the next generation.)}
@@ -280,7 +274,7 @@ After fine-tuning the parameters, the following SBGP parameter setup is used:
 \begin{itemize}
   \item Population size: \textbf{35} \emph{(Greater population size led to increased runtime with minimal performance improvements.)}
   \item Number of generations: \textbf{110} \emph{(More generations were required than the NGP, likely due to the application of the local and global threshold.)}
-  \item Crossover rate: \textbf{0.5} \emph{(Crossover did not seem to help with the convergence, and was therefore kept on the low side. This value is mostly inspired by Kapoor and Pillay \cite{kapoor_genetic_2024}.)}
+  \item Crossover rate: \textbf{0.5} \emph{(Crossover did not seem to help too much with the convergence, and was therefore kept on the low side. This value is mostly inspired by Kapoor and Pillay \cite{kapoor_genetic_2024}.)}
   \item Mutation rate: \textbf{0.25} \emph{(The mutation rate were set high to escape possible local optima and to allow solutions to be accepted. This allowed for genetic diversity throughout the run. This value is also inspired by Kapoor and Pillay \cite{kapoor_genetic_2024}.)}
   \item Reproduction rate: \textbf{0.25 }\emph{(The reproduction rate was simply a fallback and simply transfers the parents to the next generation.)}
   \item Max Depth: \textbf{6} \emph{(A smaller number than NGP's max depth was chosen to cater for the thresholding mechanism. There's a strong correlation between this parameter and the cutoff depth. This is not the strict max depth, but rather the initial max depth.)} 
