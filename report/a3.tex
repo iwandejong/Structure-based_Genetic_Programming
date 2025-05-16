@@ -79,7 +79,7 @@ It was evident that the target variable is imbalanced (Figure \ref{allDist}, bot
 No duplicates were detected and therefore no further action were taken in this regard.
 
 \subsection{Outliers}
-To remove the outlier entries, data points with a \(\pm{3}\) \(Z\)-score (an indication of how many standard deviations the point is away from the mean) were removed. Removing outliers helped the model to converge better due to more consistent tree outputs. Since only one row were removed, it didn't greatly impact the model's ability to convergence, but the outlier were removed regardless of the outcome.
+To remove the outlier entries, data points with a \(\pm{3}\) \(Z\)-score (an indication of how many standard deviations the point is away from the mean) were removed. Removing outliers helped the model to converge better due to more consistent tree outputs. Since only one row were removed, it didn't greatly impact the model's ability to convergence, but the outlier was removed regardless of the outcome.
 
 \subsection{Skewness}
 As noted in Section \ref{EDA}, a few of the variables, including the target variable, were skewed. No further preprocessing was done with regards to skewness as the fitness function (described in Section \ref{fitness}) catered for the imbalanced data.
@@ -182,16 +182,14 @@ In terms of the terminal set, all variables were kept as they all influenced the
     bilirubin, alk_phosphate, sgot, albumin,
     protime, histology}
 \end{verbatim}
-where \texttt{double} is a random real number between -0.5 and 0.5. The features from the dataset differed between continuous and discrete variables, but could co-occur. Experimentation were done to separate continuous and discrete features, but it turned out that if the trees were discrete close to the root, it barely used continuous features elsewhere, causing the tree to be biased towards one class. Since the continuous variables are normalised between 0.0 and 1.0, it worked well with the discrete variables between 0.0 and 1.0.
+where \texttt{double} is a random real number between -0.5 and 0.5. The features from the dataset differed between continuous and discrete variables, but could co-occur. Experimentation were done to separate continuous and discrete features, but it turned out that if the trees were discrete close to the root, it barely used continuous features elsewhere, causing the tree to be biased towards one class. Since the continuous variables are normalised between 0.0 and 1.0, it worked well with the discrete variables either 0.0 or 1.0.
 
 \subsubsection{Train/test split}
-A standard 80\%/20\% train split was used The datasets were shuffled before splitting them for training and testing to ensure randomness. This training split gave enough data to fit without leaving too little data for testing.
+A standard 80\%/20\% train split was used. The datasets were shuffled before splitting them for training and testing to ensure randomness. This training split gave enough data to fit without leaving too little data for testing.
 
 \subsubsection{Initial Population}
 \label{initPop}
-The initial population was generated using a randomised grow method with \texttt{maxDepth} as a generation-specific parameter.
-
-For each iteration, two booleans would independently determine if a left or right subtree would be further generated or not. The chance of these two booleans being true is increasingly determined by the current \texttt{maxDepth}. In the recursive function, \texttt{maxDepth} decreases as the tree grows.
+The initial population was generated using a randomised grow method with \texttt{maxDepth} as a generation-specific parameter. For each iteration, two booleans would independently determine if a left or right subtree would be further generated or not. The chance of these two booleans being true is increasingly determined by the current \texttt{maxDepth}. In the recursive function, \texttt{maxDepth} decreases as the tree grows. This generation method helped to start off with a diverse population of various depths.
 
 \subsubsection{Tournament Selection}
 \label{selection}
