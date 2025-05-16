@@ -286,7 +286,10 @@ On top of that, specific SBGP parameters were added:
   \item Cutoff Depth: \textbf{4} \emph{(Manual tuning were done to find the best value for overall performance. As mentioned before, this value is correlated with the initial maximum depth.)}
 \end{itemize}
 
+\newpage
+
 \subsection{Results}
+The following section will exhibit the results, but will only be discussed in Section \ref{discussion}. Captions were added to explain the figures and tables.
 \begin{figure}[H]
   \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{assets/gpPopFitness.png}}
   \caption{Population fitness over multiple runs. It's evident in this figure that SBGP required more runs to converge whereas NGP runs converged sufficiently after 75 generations. NGP's runs were more stable, where SBGP likely depended more on whether to escape local optima.}
@@ -380,6 +383,7 @@ Average & 0.722852 & \textbf{0.785244} & +0.062392 \\
 \end{table}
 
 \section{Discussion}
+\label{discussion}
 SBGP is an interesting avenue to build and train a GP model for data classification. Different than a normal GP implementation, SBGP attempts to control the search space, but comes with a number of challenges. During experimentation, as seen in Figure \ref{fig:gpPopResults} and Figure \ref{fig:gpBestResults}, it is noted that the SBGP required more generations to converge similarly to the baseline GP (NGP). This is likely due to the \emph{gating} that the local and global threshold employs, where some good-enough solutions might be rejected due to possible local optima.
 
 Even though NGP converged, there were signs of overfitting as the training accuracy were lower than the testing accuracy. However, with the SBGP, underfitting is noted since the mean test accuracy is higher than the mean train accuracy. The case for underfitting could likely be traced back to the dataset being relatively small.
