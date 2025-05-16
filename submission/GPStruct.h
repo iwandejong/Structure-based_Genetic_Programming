@@ -65,7 +65,7 @@ class GPStruct {
     int localIndex(GPNodeStruct* tree);
     
     // selection method
-    std::vector<GPNodeStruct*> tournamentSelection(bool inverse = false);
+    std::vector<GPNodeStruct*> tournamentSelection();
     
     // genetic operators
     void mutation(const GPNodeStruct& tree);

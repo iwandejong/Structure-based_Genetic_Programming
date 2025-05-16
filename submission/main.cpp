@@ -112,7 +112,7 @@ void run() {
   std::vector<double> applicationRatesStruct = {0.5, 0.25}; // crossoverRate, mutationRate
   int tournamentSizeStruct = 7;
 
-  int runs = 10;
+  int runs = 1; // only 1 run for submission purposes
   std::vector<GPStruct*> gps;
   std::vector<GPStruct*> gp_structs;
 

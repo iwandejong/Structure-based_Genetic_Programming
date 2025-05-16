@@ -174,7 +174,6 @@ int GPStruct::nodeLevel(GPNodeStruct* root, GPNodeStruct* targetNode) {
 void GPStruct::train(int run, bool structureBased) {
   // initial parents selection
   std::vector<GPNodeStruct*> parents = tournamentSelection();
-  std::vector<GPNodeStruct*> losers = tournamentSelection(true);
   double summedFitness = 0.0;
   for (int i = 0; i < maxGenerations; i++) {
     // operators
@@ -182,6 +181,8 @@ void GPStruct::train(int run, bool structureBased) {
     int action = 0;
 
     std::cout << "\033[90m" "Winner 1: " << fitness(*parents[0], "train") << ", Winner 2: " << fitness(*parents[1], "train") << std::endl;
+    std::cout << "\033[90m" "Loser 1: " << fitness(*parents[2], "train") << ", Loser 2: " << fitness(*parents[3], "train") << std::endl;
+    std::cout << "__________________________" << std::endl;
 
     // // print population
     // std::cout << "\033[34m" "Population: " << std::endl << "\033[0m";
@@ -208,10 +209,9 @@ void GPStruct::train(int run, bool structureBased) {
       action = 2;
     }
 
-    int l1 = getIndex(*losers[0]);
-    int l2 = getIndex(*losers[1]);
+    int l1 = getIndex(*parents[2]);
+    int l2 = getIndex(*parents[3]);
     std::cout << "\033[90m" "Offspring 1: " << fitness(*offspring1, "train") << ", Offspring 2: " << fitness(*offspring2, "train") << std::endl;
-    std::cout << "\033[90m" "Loser 1: " << fitness(*losers[0], "train") << ", Loser 2: " << fitness(*losers[1], "train") << std::endl;
 
     if (structureBased) {
       if (isGlobalSearch) {
@@ -287,7 +287,6 @@ void GPStruct::train(int run, bool structureBased) {
 
     // 5 : select parents for next generation
     parents = tournamentSelection();
-    losers = tournamentSelection(true);
   }
 }
 
@@ -397,42 +396,39 @@ double GPStruct::test(int run) {
 }
 
 // selection method
-std::vector<GPNodeStruct*> GPStruct::tournamentSelection(bool inverse) {
-  std::vector<GPNodeStruct*> newPopulation(tournamentSize);
-  std::vector<int> selectedIndices;
-
-  for (int p = 0; p < 2; p++) {
-    std::vector<GPNodeStruct*> tempPopulation(tournamentSize);
-    int randomIndividual = std::rand() % populationSize; 
-    int initialRandom = randomIndividual;
-    selectedIndices.push_back(randomIndividual);
-    for (int x = 0; x < tournamentSize; x++) {
-      tempPopulation[x] = population[randomIndividual];
-      randomIndividual = std::rand() % populationSize;
+std::vector<GPNodeStruct*> GPStruct::tournamentSelection() {
+    std::vector<GPNodeStruct*> selectedIndividuals(4);
+    std::vector<int> selectedIndices;
+    std::vector<std::pair<GPNodeStruct*, double>> tournamentParticipants;
+    
+    for (int i = 0; i < tournamentSize; i++) {
+      int randomIndividual = std::rand() % populationSize;
+      
+      // ensure no duplicates
       while (std::find(selectedIndices.begin(), selectedIndices.end(), randomIndividual) != selectedIndices.end()) {
         randomIndividual = std::rand() % populationSize;
       }
+      
       selectedIndices.push_back(randomIndividual);
+      tournamentParticipants.push_back({population[randomIndividual], fitness(*population[randomIndividual], "train")});
     }
     
-    GPNodeStruct* winner = nullptr;
-    double wF = inverse ? INFINITY : -INFINITY;
-    for (int i = 0; i < tournamentSize; i++) {
-      double tF = fitness(*tempPopulation[i], "train");
-      if (inverse ? tF < wF : tF > wF) {
-        winner = tempPopulation[i];
-        wF = tF;
+    // sort the tournament participants by fitness
+    std::sort(tournamentParticipants.begin(), tournamentParticipants.end(), [](const std::pair<GPNodeStruct*, double>& a, const std::pair<GPNodeStruct*, double>& b) {
+      if (a.second == b.second) {
+        return a.first < b.first; // sort by pointer address if fitness is equal
       }
-    }
-    newPopulation[p] = winner;
+      return a.second > b.second;
+    });
     
-    // swop if p-1 is less fit than p
-    if (p > 0 && fitness(*newPopulation[p], "train") < fitness(*newPopulation[p-1], "train")) {
-      std::swap(newPopulation[p], newPopulation[p-1]);
-    }
-  }
-
-  return newPopulation;
+    // winners
+    selectedIndividuals[0] = tournamentParticipants[0].first;
+    selectedIndividuals[1] = tournamentParticipants[1].first;
+    // losers
+    selectedIndividuals[2] = tournamentParticipants[tournamentSize - 2].first;
+    selectedIndividuals[3] = tournamentParticipants[tournamentSize - 1].first;
+    
+    return selectedIndividuals;
 }
 
 // genetic operators
