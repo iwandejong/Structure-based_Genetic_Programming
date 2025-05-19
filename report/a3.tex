@@ -137,7 +137,7 @@ To control the population of both the NGP and SBGP, a \textbf{steady-state contr
 With SSCM, a fixed population size is maintained throughout the run where the offspring replaces individuals with poor fitness. The method to select the worst individuals is described in Section \ref{selection}. By replacing the worst individuals, top-performing individuals are preserved. This helps with steady convergence. On the other hand, a generational control model could potentially disrupt those individuals if no mechanism is put in place.
 
 \subsubsection{Structure-based GP (SBGP) Specification}
-To implement SBGP, a similar approach has been followed to ISBGP-II, as proposed by Kapoor and Pillay \cite{kapoor_genetic_2024}. This specific structure-based approach employs global and local similarity indices to adjust the search strategy. Global search allows for wider exploration, while the indication of a promising individual further exploits the program. Once local search fails it returns to global search. This essentially escapes local optima. The SSCM model (Section \ref{steadyState}) is modified for SBGP as follows:
+To implement SBGP, a similar approach has been followed to ISBGP-II, as proposed by Kapoor and Pillay \cite{kapoor_genetic_2024}. This specific structure-based approach employs global and local similarity indices to adjust the search strategy. Global search allows for wider exploration, while the indication of a promising individual further exploits the program. Once local search fails it returns to global search. This essentially escapes local optima. The similarity indices are calculated by counting the number of nodes that are the same at some position above the cutoff depth (global search) or below the cutoff depth (local search). The SSCM control model (Section \ref{steadyState}) is modified for SBGP as follows:
 \begin{table}[H]
 \centering
 \begin{tabularx}{\textwidth}{X}
@@ -256,7 +256,7 @@ The parameters were manually tuned to achieve optimal performance. A wide range 
 After fine-tuning the parameters, the following NGP parameter setup is used:
 \begin{itemize}
   \item Population size: \textbf{35} \emph{(Greater population size led to increased runtime with minimal performance improvements.)}
-  \item Number of generations: \textbf{70} \emph{(A greater number of generations led to increased runtime. The GP already converged and didn't notably impact the results.)}
+  \item Number of generations: \textbf{80} \emph{(A greater number of generations led to increased runtime. The GP already converged and didn't notably impact the results.)}
   \item Crossover rate: \textbf{0.6} \emph{(Higher crossover rates reduced convergence. A reasonably low crossover rate helped for convergence.)}
   \item Mutation rate: \textbf{0.25} \emph{(A high mutation rate was selected to allow the model to naturally escape local optima.)}
   \item Reproduction rate: \textbf{0.15} \emph{(The reproduction rate was simply a fallback and simply transfers the parents to the next generation.)}
@@ -290,13 +290,13 @@ On top of that, specific SBGP parameters were added:
 The following section will exhibit the results, but will only be discussed in Section \ref{discussion}. Captions were added to explain the figures and tables.
 \begin{figure}[H]
   \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{assets/gpPopFitness.png}}
-  \caption{Population fitness over multiple runs. It's evident in this figure that SBGP required more runs to converge whereas NGP runs converged sufficiently after 75 generations. NGP's runs were more stable, where SBGP likely depended more on whether to escape local optima.}
+  \caption{Mean population fitness over multiple runs for both the NGP and SBGP variants.}
   \label{fig:gpPopResults}
 \end{figure}
 
 \begin{figure}[H]
   \makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{assets/GPbest.png}}
-  \caption{Progression of best tree fitness per generation for both the NGP and SBGP variants across all runs.}
+  \caption{Progression of mean best tree fitness per generation for both the NGP and SBGP variants across all runs.}
   \label{fig:gpBestResults}
 \end{figure}
 
@@ -309,19 +309,19 @@ The following section will exhibit the results, but will only be discussed in Se
 & \multicolumn{4}{l|}{\emph{Best Tree Statistics (BACC Fitness)}} & \multicolumn{4}{l}{\emph{Population Statistics (BACC Fitness)}} \\
 Run & Mean & Min & Max & Std & Mean & Min & Max & Std \\
 \midrule
-0 & 0.803983 & 0.778367 & 0.822653 & 0.016623 & 0.739508 & 0.514927 & 0.814245 & 0.082290 \\
-1 & 0.751166 & 0.669184 & 0.772449 & 0.025206 & 0.713052 & 0.529096 & 0.762163 & 0.064955 \\
-2 & 0.796879 & 0.783460 & 0.798611 & 0.004855 & 0.743261 & 0.504960 & 0.798611 & 0.079888 \\
-3 & 0.805149 & 0.757137 & 0.823751 & 0.023970 & 0.739562 & 0.542800 & 0.813062 & 0.072494 \\
-4 & 0.738013 & 0.674060 & 0.743421 & 0.013222 & 0.690625 & 0.503136 & 0.743330 & 0.070118 \\
-5 & 0.768891 & 0.747685 & 0.773727 & 0.010200 & 0.729921 & 0.539964 & 0.773727 & 0.060717 \\
-6 & 0.784124 & 0.756970 & 0.795304 & 0.007241 & 0.732184 & 0.530353 & 0.784514 & 0.071208 \\
-7 & 0.774320 & 0.674060 & 0.799248 & 0.035074 & 0.717953 & 0.520440 & 0.797385 & 0.077072 \\
-8 & 0.776458 & 0.757143 & 0.782653 & 0.011018 & 0.728679 & 0.514070 & 0.782653 & 0.072485 \\
-9 & 0.719593 & 0.714512 & 0.719667 & 0.000616 & 0.692540 & 0.549054 & 0.719667 & 0.038272 \\
+0 & 0.791786 & 0.778367 & 0.817143 & 0.016882 & 0.704090 & 0.502945 & 0.787580 & 0.085314 \\
+1 & 0.728615 & 0.669184 & 0.807347 & 0.059000 & 0.658819 & 0.525907 & 0.749720 & 0.056126 \\
+2 & 0.795013 & 0.783460 & 0.798611 & 0.006488 & 0.726735 & 0.498611 & 0.794426 & 0.084101 \\
+3 & 0.816408 & 0.790841 & 0.823751 & 0.012695 & 0.750766 & 0.547598 & 0.819933 & 0.072035 \\
+4 & 0.726088 & 0.674060 & 0.772932 & 0.028202 & 0.633931 & 0.498271 & 0.737089 & 0.069238 \\
+5 & 0.775485 & 0.747685 & 0.811343 & 0.026576 & 0.711063 & 0.530556 & 0.776405 & 0.057303 \\
+6 & 0.828533 & 0.756970 & 0.857850 & 0.034577 & 0.745603 & 0.525427 & 0.843460 & 0.092821 \\
+7 & 0.748581 & 0.668797 & 0.802256 & 0.043329 & 0.697288 & 0.516461 & 0.787884 & 0.064602 \\
+8 & 0.784492 & 0.757143 & 0.797551 & 0.012442 & 0.728258 & 0.502991 & 0.786583 & 0.076630 \\
+9 & 0.797467 & 0.714512 & 0.818596 & 0.026703 & 0.696833 & 0.539107 & 0.781086 & 0.071149 \\
 \hline
 \hline
-Overall & \textbf{0.771858} & 0.669184 & 0.823751 & 0.028398 & 0.722728 & 0.503136 & 0.814245 & 0.018919 \\
+Overall & \textbf{0.779247} & 0.668797 & 0.857850 & 0.034832 & 0.705339 & 0.498271 & 0.843460 & 0.036671 \\
 \bottomrule
 \end{tabular}}
 \caption{\textbf{NGP Training Results:} Best Tree Fitness and Population Fitness statistics per GP run. The Overall row shows the mean across runs, the best result achieved in any run, the worst best result in any run, and the standard deviation of means across runs.}
@@ -336,19 +336,19 @@ Overall & \textbf{0.771858} & 0.669184 & 0.823751 & 0.028398 & 0.722728 & 0.5031
 & \multicolumn{4}{l|}{\emph{Best Tree Statistics (BACC Fitness)}} & \multicolumn{4}{l}{\emph{Population Statistics (BACC Fitness)}} \\
 Run & Mean & Min & Max & Std & Mean & Min & Max & Std \\
 \midrule
-0 & 0.789472 & 0.778367 & 0.792449 & 0.005742 & 0.710726 & 0.502945 & 0.792449 & 0.096913 \\
-1 & 0.673630 & 0.669184 & 0.674286 & 0.001720 & 0.640172 & 0.525907 & 0.674286 & 0.045326 \\
-2 & 0.792695 & 0.783460 & 0.798611 & 0.007312 & 0.722399 & 0.498611 & 0.795058 & 0.087622 \\
-3 & 0.804520 & 0.790841 & 0.817209 & 0.007729 & 0.745801 & 0.547598 & 0.806860 & 0.074035 \\
-4 & 0.725852 & 0.674060 & 0.750752 & 0.029860 & 0.648554 & 0.498271 & 0.744517 & 0.072910 \\
-5 & 0.764732 & 0.747685 & 0.790509 & 0.019130 & 0.707420 & 0.530556 & 0.761673 & 0.058860 \\
-6 & 0.822825 & 0.756970 & 0.841893 & 0.034001 & 0.731149 & 0.525427 & 0.828566 & 0.090258 \\
-7 & 0.757298 & 0.668797 & 0.796992 & 0.039009 & 0.697626 & 0.516461 & 0.767573 & 0.066274 \\
-8 & 0.777915 & 0.757143 & 0.782653 & 0.009992 & 0.713997 & 0.502991 & 0.782653 & 0.080754 \\
-9 & 0.794449 & 0.714512 & 0.818596 & 0.027248 & 0.685374 & 0.539107 & 0.779614 & 0.068336 \\
+0 & 0.783365 & 0.731224 & 0.802245 & 0.028006 & 0.674108 & 0.523796 & 0.766583 & 0.078664 \\
+1 & 0.709325 & 0.686122 & 0.717551 & 0.010533 & 0.661036 & 0.483656 & 0.716513 & 0.066154 \\
+2 & 0.739899 & 0.739899 & 0.739899 & 0.000000 & 0.633045 & 0.513258 & 0.673268 & 0.047867 \\
+3 & 0.717659 & 0.714909 & 0.736519 & 0.007235 & 0.661295 & 0.510122 & 0.709488 & 0.058328 \\
+4 & 0.731596 & 0.713910 & 0.761278 & 0.013634 & 0.663309 & 0.496300 & 0.727105 & 0.068907 \\
+5 & 0.747685 & 0.747685 & 0.747685 & 0.000000 & 0.670115 & 0.504547 & 0.742692 & 0.074325 \\
+6 & 0.782850 & 0.772744 & 0.831255 & 0.022219 & 0.695223 & 0.533099 & 0.766413 & 0.080424 \\
+7 & 0.752820 & 0.752820 & 0.752820 & 0.000000 & 0.672011 & 0.518931 & 0.713437 & 0.062823 \\
+8 & 0.727579 & 0.717143 & 0.742653 & 0.012600 & 0.639969 & 0.521499 & 0.739178 & 0.067025 \\
+9 & 0.724449 & 0.704203 & 0.738898 & 0.014277 & 0.670600 & 0.520924 & 0.733454 & 0.060272 \\
 \hline
 \hline
-Overall & \textbf{0.770339} & 0.668797 & 0.841893 & 0.043411 & 0.700322 & 0.498271 & 0.828566 & 0.033961 \\
+Overall & \textbf{0.741723} & 0.686122 & 0.831255 & 0.025424 & 0.664071 & 0.483656 & 0.766583 & 0.017558 \\
 \bottomrule
 \end{tabular}}
 \caption{\textbf{SBGP Training Results:} Best Tree Fitness and Population Fitness statistics per SBGP run. The Overall row shows the mean across runs, the best result achieved in any run, the worst best result in any run, and the standard deviation of means across runs.}
@@ -362,18 +362,18 @@ Overall & \textbf{0.770339} & 0.668797 & 0.841893 & 0.043411 & 0.700322 & 0.4982
 \toprule
 \textbf{Run} & \textbf{NGP} & \textbf{SBGP} & \textbf{Difference} \\
 \midrule
-1 & \textbf{0.732143} & 0.690476 & -0.041667 \\
-2 & \textbf{0.708333} & 0.690476 & -0.017857 \\
-3 & 0.660326 & \textbf{0.701087} & +0.040761 \\
-4 & 0.633333 & \textbf{0.633333} & +0.000000 \\
-5 & \textbf{0.925926} & 0.870370 & -0.055556 \\
-6 & \textbf{0.826923} & 0.803846 & -0.023077 \\
-7 & 0.672619 & \textbf{0.857143} & +0.184524 \\
-8 & 0.708333 & \textbf{0.833333} & +0.125000 \\
-9 & 0.732143 & \textbf{0.782738} & +0.050595 \\
-10 & 0.570000 & \textbf{0.796667} & +0.226667 \\
+1  & 0.711310 & \textbf{0.803571} & +0.092261 \\
+2  & 0.711310 & \textbf{0.824405} & +0.113095 \\
+3  & 0.660326 & \textbf{0.722826} & +0.062500 \\
+4  & \textbf{0.653333} & 0.610000 & -0.043333 \\
+5  & \textbf{0.944444} & 0.925926 & -0.018518 \\
+6  & 0.746154 & \textbf{0.761538} & +0.015384 \\
+7  & \textbf{0.690476} & 0.672619 & -0.017857 \\
+8  & \textbf{0.833333} & 0.814815 & -0.018518 \\
+9  & \textbf{0.732143} & 0.660714 & -0.071429 \\
+10 & 0.570000 & \textbf{0.716667} & +0.146667 \\
 \midrule
-Average & 0.717008 & \textbf{0.765947} & +0.048939 \\
+Average & 0.725283 & \textbf{0.751308} & +0.026025 \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Test Results:} Comparison of NGP and SBGP fitness (BACC) across 10 runs. Positive differences indicate better performance by SBGP.}
@@ -382,15 +382,15 @@ Average & 0.717008 & \textbf{0.765947} & +0.048939 \\
 
 \section{Discussion}
 \label{discussion}
-SBGP is an interesting avenue to build and train a GP model for data classification. Different than a normal GP implementation, SBGP attempts to control the search space, but comes with a number of challenges. During experimentation, as seen in Figure \ref{fig:gpPopResults} and Figure \ref{fig:gpBestResults}, it is noted that the SBGP required more generations to converge similarly to the baseline GP (NGP). This is likely due to the \emph{gating} that the local and global threshold employs, where some good-enough solutions might be rejected due to possible local optima.
+SBGP is an interesting avenue to build and train a GP model for data classification. Different than a normal GP implementation, SBGP attempts to control the search space, but comes with a number of challenges. During experimentation, as seen in Figure \ref{fig:gpPopResults} and Figure \ref{fig:gpBestResults}, it is noted that the SBGP required more generations to converge similarly to the baseline GP (NGP). This is likely due to the \emph{gating} that the local and global threshold employs, where some good-enough solutions might be rejected due to possible local optima. It's also evident in figure \ref{fig:gpPopResults} that SBGP required more runs to converge whereas NGP runs converged sufficiently after 80 generations.
 
-Even though NGP converged, there were signs of overfitting as the training accuracy were lower than the testing accuracy. However, with the SBGP, underfitting is noted since the mean test accuracy is higher than the mean train accuracy. The case for underfitting could likely be traced back to the dataset being relatively small.
+Even though NGP converged, there were signs of overfitting as the training accuracy were lower than the testing accuracy. However, with the SBGP, the testing accuracy was better than the training accuracy (by 0.96\%), indicating a good fit of the data.
 
 In both cases, the mechanisms employed in the fitness function played an important role to accurately measure the outcomes of the individuals. It's also observed in Table \ref{ngpResults} and Table \ref{sbgpResults} that SBGP's population's standard deviation is almost double NGP's standard deviation, indicating better diversity and exploration.
 
-With the aim of maximising BACC, SBGP outperforms the NGP on testing data by 4.89\% (Table \ref{tab:bacc_comparison}). However, the SBGP struggled when the parameters were not tuned well, and it's likely that there are better parameters for this specific solution. Further work could include a more fine-grained approach to determining exact function and terminal sets. Due to time constraints, no automated parameter fine-tuning methods were explored, which could potentially improve the overall solution. Another addition could be to threshold continuous variables to act as boolean variables, but is not guaranteed to work. Other genetic operators such as the edit operator could also help to identify individuals with local optima and replace nodes in the individual tree with better nodes. This is not necessarily meant to directly improve fitness, but rather to ensure genetic diversity and mitigate local optima. Data scarcity was a problem in this assignment, and preprocessing techniques such as upsampling can be explored to potentially expose better performance.
+With the aim of maximising BACC, SBGP outperforms the NGP on testing data by 2.6\% (Table \ref{tab:bacc_comparison}). However, the SBGP struggled when the parameters were not tuned well, and it's likely that there are better parameters for this specific solution. Further work could include a more fine-grained approach to determining exact function and terminal sets. Due to time constraints, no automated parameter fine-tuning methods were explored, which could potentially improve the overall solution. Another addition could be to threshold continuous variables to act as boolean variables, but is not guaranteed to work. Other genetic operators such as the edit operator could also help to identify individuals with local optima and replace nodes in the individual tree with better nodes. This is not necessarily meant to directly improve fitness, but rather to ensure genetic diversity and mitigate local optima. Data scarcity was a problem in this assignment, and preprocessing techniques such as upsampling can be explored to potentially expose better performance.
 
-In conclusion, SBGP is not domain-specific and can readily be adapted to other domains and datasets with sufficient parameter fine-tuning and GP setup. It is shown in this report that by controlling the search space, performance increases can be observed.
+In conclusion, SBGP is not domain-specific and can readily be adapted to other domains and datasets with sufficient parameter fine-tuning and GP setup. It is shown in this report that by controlling the search space, better accuracy can be observed.
 
 \bibliographystyle{IEEEtran}
 \bibliography{COS710A1}

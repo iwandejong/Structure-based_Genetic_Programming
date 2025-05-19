@@ -177,12 +177,13 @@ void GPStruct::train(int run, bool structureBased) {
   double summedFitness = 0.0;
   for (int i = 0; i < maxGenerations; i++) {
     // operators
+    auto start_gen = std::chrono::high_resolution_clock::now();
     double aR = static_cast<double>(std::rand()) / RAND_MAX;
     int action = 0;
 
-    std::cout << "\033[90m" "Winner 1: " << fitness(*parents[0], "train") << ", Winner 2: " << fitness(*parents[1], "train") << std::endl;
-    std::cout << "\033[90m" "Loser 1: " << fitness(*parents[2], "train") << ", Loser 2: " << fitness(*parents[3], "train") << std::endl;
-    std::cout << "__________________________" << std::endl;
+    // std::cout << "\033[90m" "Winner 1: " << fitness(*parents[0], "train") << ", Winner 2: " << fitness(*parents[1], "train") << std::endl;
+    // std::cout << "\033[90m" "Loser 1: " << fitness(*parents[2], "train") << ", Loser 2: " << fitness(*parents[3], "train") << std::endl;
+    // std::cout << "__________________________" << std::endl;
 
     // // print population
     // std::cout << "\033[34m" "Population: " << std::endl << "\033[0m";
@@ -211,18 +212,18 @@ void GPStruct::train(int run, bool structureBased) {
 
     int l1 = getIndex(*parents[2]);
     int l2 = getIndex(*parents[3]);
-    std::cout << "\033[90m" "Offspring 1: " << fitness(*offspring1, "train") << ", Offspring 2: " << fitness(*offspring2, "train") << std::endl;
+    // std::cout << "\033[90m" "Offspring 1: " << fitness(*offspring1, "train") << ", Offspring 2: " << fitness(*offspring2, "train") << std::endl;
 
     if (structureBased) {
       if (isGlobalSearch) {
         int GI1 = globalIndex(offspring1);
         int GI2 = globalIndex(offspring2);
-        std::cout << "\033[90m" "GI1: " << GI1 << ", GI2: " << GI2 << std::endl << "\033[0m";
+        // std::cout << "\033[90m" "GI1: " << GI1 << ", GI2: " << GI2 << std::endl << "\033[0m";
 
         // ! Global search
         if (GI1 < globalThreshold) {
           population[l1] = offspring1;
-          std::cout << "\033[35m" "APPROVED P1 (Global)" << std::endl << "\033[0m";
+          // std::cout << "\033[35m" "APPROVED P1 (Global)" << std::endl << "\033[0m";
           
           // Start local search if promising individual found
           isGlobalSearch = false;
@@ -230,29 +231,32 @@ void GPStruct::train(int run, bool structureBased) {
         
         if (GI2 < globalThreshold) {
           population[l2] = offspring2;
-          std::cout << "\033[35m" "APPROVED P2 (Global)" << std::endl << "\033[0m";
+          // std::cout << "\033[35m" "APPROVED P2 (Global)" << std::endl << "\033[0m";
           
           // Start local search if promising individual found
           isGlobalSearch = false;
         }
+        std::cout << "\033[31m" "[Rejected global search due to threshold]" << std::endl << "\033[0m";
       } else {
         int LI1 = localIndex(offspring1);
         int LI2 = localIndex(offspring2);
-        std::cout << "\033[90m" "LI1: " << LI1 << ", LI2: " << LI2 << std::endl;
+        // std::cout << "\033[90m" "LI1: " << LI1 << ", LI2: " << LI2 << std::endl;
 
         // ! Local search
         if (LI1 < localThreshold) {
           population[l1] = offspring1;
-          std::cout << "\033[35m" "APPROVED P1 (Local)" << std::endl << "\033[0m";
+          // std::cout << "\033[35m" "APPROVED P1 (Local)" << std::endl << "\033[0m";
         } else {
+          std::cout << "\033[31m" "[Rejected local search due to threshold]" << std::endl << "\033[0m";
           // If local search is not productive, switch back to global
           isGlobalSearch = true;
         }
         
         if (LI2 < localThreshold) {
           population[l2] = offspring2;
-          std::cout << "\033[35m" "APPROVED P2 (Local)" << std::endl << "\033[0m";
+          // std::cout << "\033[35m" "APPROVED P2 (Local)" << std::endl << "\033[0m";
         } else {
+          std::cout << "\033[31m" "[Rejected local search due to threshold]" << std::endl << "\033[0m";
           // If local search is not productive, switch back to global
           isGlobalSearch = true;
         }
@@ -276,14 +280,14 @@ void GPStruct::train(int run, bool structureBased) {
 
     // print results
     double popFitness = populationFitness();
-    std::cout << "\033[90m" "Population Fitness: " << std::to_string(popFitness) << std::endl << "\033[0m";
+    // std::cout << "\033[90m" "Population Fitness: " << std::to_string(popFitness) << std::endl << "\033[0m";
     double bTF = fitness(*bestTree(), "train");
     double bTFtest = 0.0;
-    // appendToCSV({std::to_string(run),std::to_string(i),std::to_string(popFitness),std::to_string(bTF),std::to_string(action),structureBased ? "1" : "0"});
-
+    appendToCSV({std::to_string(run),std::to_string(i),std::to_string(popFitness),std::to_string(bTF),std::to_string(action),structureBased ? "1" : "0"});
+    auto end_gen = std::chrono::high_resolution_clock::now() - start_gen;
     std::string colorAction = action == 0 ? "\033[91m" : action == 1 ? "\033[92m" : "\033[93m";
     std::string printAction = action == 0 ? "Reproduction" : action == 1 ? "Crossover" : "Mutation";
-    std::cout << "Generation " << i+1 << "/" << maxGenerations << " [" << colorAction << printAction << "\033[0m" << "]" << std::endl;
+    std::cout << "Generation " << i+1 << "/" << maxGenerations << " [" << colorAction << printAction << "\033[0m" << "] in " << std::chrono::duration<double>(end_gen).count() << " seconds with average depth " << std::to_string(avgDepth()) << std::endl;
 
     // 5 : select parents for next generation
     parents = tournamentSelection();
@@ -486,25 +490,37 @@ void GPStruct::crossover(GPNodeStruct* tree1, GPNodeStruct* tree2) {
         continue;
       }
 
+      // Create deep copies of the subtrees
       GPNodeStruct* temp1Copy = new GPNodeStruct(*temp1);
       GPNodeStruct* temp2Copy = new GPNodeStruct(*temp2);
           
-      // Replace the subtrees in the respective parents
+      // Find which child index holds the subtree in parent1
+      int childIndex1 = -1;
       for (int i = 0; i < tempParent1->children.size(); i++) {
         if (tempParent1->children[i] == temp1) {
-          delete tempParent1->children[i];
-          tempParent1->children[i] = temp2Copy;
+          childIndex1 = i;
           break;
         }
       }
-          
+      
+      // Find which child index holds the subtree in parent2
+      int childIndex2 = -1;
       for (int i = 0; i < tempParent2->children.size(); i++) {
         if (tempParent2->children[i] == temp2) {
-          delete tempParent2->children[i];
-          tempParent2->children[i] = temp1Copy;
+          childIndex2 = i;
           break;
         }
       }
+      
+      if (childIndex1 == -1 || childIndex2 == -1) continue;
+      
+      // Properly delete the old subtrees
+      delete tempParent1->children[childIndex1];
+      delete tempParent2->children[childIndex2];
+      
+      // Replace with the new copies
+      tempParent1->children[childIndex1] = temp2Copy;
+      tempParent2->children[childIndex2] = temp1Copy;
           
       return; // successful crossover
     }
@@ -551,7 +567,7 @@ double GPStruct::fitness(const GPNodeStruct& tree, const std::string& set) {
     // }
 
     if (std::isnan(treeFitness) || std::isinf(treeFitness)) {
-      std::cerr << "Invalid fitness value" << std::endl;
+      // std::cerr << "Invalid fitness value" << std::endl;
       return 0.0; // bad BACC-score
     }
 

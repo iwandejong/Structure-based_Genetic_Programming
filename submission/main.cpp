@@ -101,7 +101,7 @@ void run() {
   // setup for normal GP
   int populationSize = 35;
   int maxDepth = 7; // initial depth, can grow indefinitely
-  int maxGenerations = 70;
+  int maxGenerations = 80;
   std::vector<double> applicationRates = {0.6, 0.25}; // crossoverRate, mutationRate
   int tournamentSize = 7;
 
@@ -133,6 +133,9 @@ void run() {
     gps[i]->train(i);
     bestFitness[i] = gps[i]->test(i);
     auto end = std::chrono::high_resolution_clock::now();
+
+    // reset the seed
+    std::srand(i);
     
     // structure-based GP
     auto start_struct = std::chrono::high_resolution_clock::now();
