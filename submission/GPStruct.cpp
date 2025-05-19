@@ -181,23 +181,6 @@ void GPStruct::train(int run, bool structureBased) {
     double aR = static_cast<double>(std::rand()) / RAND_MAX;
     int action = 0;
 
-    // std::cout << "\033[90m" "Winner 1: " << fitness(*parents[0], "train") << ", Winner 2: " << fitness(*parents[1], "train") << std::endl;
-    // std::cout << "\033[90m" "Loser 1: " << fitness(*parents[2], "train") << ", Loser 2: " << fitness(*parents[3], "train") << std::endl;
-    // std::cout << "__________________________" << std::endl;
-
-    // // print population
-    // std::cout << "\033[34m" "Population: " << std::endl << "\033[0m";
-    // for (int j = 0; j < populationSize; j++) {
-    //   if (population[j] == parents[0] || population[j] == parents[1]) {
-    //     std::cout << "\033[92m" << population[j] << " " "\033[0m";
-    //   } else if (population[j] == losers[0] || population[j] == losers[1]) {
-    //     std::cout << "\033[93m" << population[j] << " " "\033[0m";
-    //   } else {
-    //     std::cout << population[j] << " ";
-    //   }
-    // }
-    // std::cout << std::endl << "\033[0m";
-
     // make deep copy of parents
     GPNodeStruct* offspring1 = new GPNodeStruct(*parents[0]);
     GPNodeStruct* offspring2 = new GPNodeStruct(*parents[1]);
@@ -212,51 +195,38 @@ void GPStruct::train(int run, bool structureBased) {
 
     int l1 = getIndex(*parents[2]);
     int l2 = getIndex(*parents[3]);
-    // std::cout << "\033[90m" "Offspring 1: " << fitness(*offspring1, "train") << ", Offspring 2: " << fitness(*offspring2, "train") << std::endl;
 
     if (structureBased) {
       if (isGlobalSearch) {
         int GI1 = globalIndex(offspring1);
         int GI2 = globalIndex(offspring2);
-        // std::cout << "\033[90m" "GI1: " << GI1 << ", GI2: " << GI2 << std::endl << "\033[0m";
-
         // ! Global search
         if (GI1 < globalThreshold) {
           population[l1] = offspring1;
-          // std::cout << "\033[35m" "APPROVED P1 (Global)" << std::endl << "\033[0m";
-          
           // Start local search if promising individual found
           isGlobalSearch = false;
         }
         
         if (GI2 < globalThreshold) {
-          population[l2] = offspring2;
-          // std::cout << "\033[35m" "APPROVED P2 (Global)" << std::endl << "\033[0m";
-          
+          population[l2] = offspring2; 
           // Start local search if promising individual found
           isGlobalSearch = false;
         }
-        std::cout << "\033[31m" "[Rejected global search due to threshold]" << std::endl << "\033[0m";
       } else {
         int LI1 = localIndex(offspring1);
         int LI2 = localIndex(offspring2);
-        // std::cout << "\033[90m" "LI1: " << LI1 << ", LI2: " << LI2 << std::endl;
 
         // ! Local search
         if (LI1 < localThreshold) {
           population[l1] = offspring1;
-          // std::cout << "\033[35m" "APPROVED P1 (Local)" << std::endl << "\033[0m";
         } else {
-          std::cout << "\033[31m" "[Rejected local search due to threshold]" << std::endl << "\033[0m";
           // If local search is not productive, switch back to global
           isGlobalSearch = true;
         }
         
         if (LI2 < localThreshold) {
           population[l2] = offspring2;
-          // std::cout << "\033[35m" "APPROVED P2 (Local)" << std::endl << "\033[0m";
         } else {
-          std::cout << "\033[31m" "[Rejected local search due to threshold]" << std::endl << "\033[0m";
           // If local search is not productive, switch back to global
           isGlobalSearch = true;
         }
@@ -266,24 +236,10 @@ void GPStruct::train(int run, bool structureBased) {
       population[l2] = offspring2;
     }
 
-    // std::cout << "\033[34m" "Population: " << std::endl << "\033[0m";
-    // for (int j = 0; j < populationSize; j++) {
-    //   if (population[j] == parents[0] || population[j] == parents[1]) {
-    //     std::cout << "\033[92m" << population[j] << " " "\033[0m";
-    //   } else if (population[j] == offspring1 || population[j] == offspring2) {
-    //     std::cout << "\033[91m" << population[j] << " " "\033[0m";
-    //   } else {
-    //     std::cout << population[j] << " ";
-    //   }
-    // }
-    // std::cout << std::endl << "\033[0m";
-
-    // print results
     double popFitness = populationFitness();
-    // std::cout << "\033[90m" "Population Fitness: " << std::to_string(popFitness) << std::endl << "\033[0m";
     double bTF = fitness(*bestTree(), "train");
     double bTFtest = 0.0;
-    appendToCSV({std::to_string(run),std::to_string(i),std::to_string(popFitness),std::to_string(bTF),std::to_string(action),structureBased ? "1" : "0"});
+    // appendToCSV({std::to_string(run),std::to_string(i),std::to_string(popFitness),std::to_string(bTF),std::to_string(action),structureBased ? "1" : "0"});
     auto end_gen = std::chrono::high_resolution_clock::now() - start_gen;
     std::string colorAction = action == 0 ? "\033[91m" : action == 1 ? "\033[92m" : "\033[93m";
     std::string printAction = action == 0 ? "Reproduction" : action == 1 ? "Crossover" : "Mutation";
