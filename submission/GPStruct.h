@@ -9,6 +9,8 @@
 #include <fstream>
 #include "GPNodeStruct.h"
 #include <algorithm>
+#include <queue>
+#include <iostream>
 
 class GPStruct {
   private:
