@@ -7,6 +7,7 @@
 #include <chrono>
 #include <algorithm>
 #include <numeric>
+#include <cstdlib>
 
 class Dataset {
   public:
