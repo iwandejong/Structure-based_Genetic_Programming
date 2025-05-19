@@ -7,6 +7,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
+#include <limits>
 
 class GPNodeStruct {
   public:
