@@ -9,6 +9,8 @@
 #include <fstream>
 #include "GPNodeStruct.h"
 #include <algorithm>
+#include <queue>
+#include <iostream>
 
 class GPStruct {
   private:
@@ -35,19 +37,11 @@ class GPStruct {
     std::vector<std::vector<double>> testing;
     std::vector<std::vector<double>> validation;
     
-    // add valid float terminals
     std::vector<std::string> validFloatTerminals = {"double"}; // [is a float]
-    // add valid boolean terminals
     std::vector<std::string> validBooleanTerminals = {}; // [is a boolean]
 
     const std::vector<std::string> validOperators = {"+", "*", "-", "/", "max", "min"}; // [returns float]
     const std::vector<std::string> validUnaryOperators = {"tanh", "sin", "cos", "log"}; // [returns float]
-    // for structure-based GP, we add conditional operators
-    // const std::vector<std::string> validLogicalOperators = {"and", "or", "not"}; // [returns boolean]
-    // params:
-    // and: and(condition1, condition2) [2]
-    // or: or(condition1, condition2) [2]
-    // not: not(condition) [1]
     const std::vector<std::string> validComparisonOperators = {"<", ">", "<=", ">=", "==", "!="}; // [returns boolean]
 
     std::vector<std::string> colNames;
@@ -73,7 +67,7 @@ class GPStruct {
     int localIndex(GPNodeStruct* tree);
     
     // selection method
-    std::vector<GPNodeStruct*> tournamentSelection(bool inverse = false);
+    std::vector<GPNodeStruct*> tournamentSelection();
     
     // genetic operators
     void mutation(const GPNodeStruct& tree);

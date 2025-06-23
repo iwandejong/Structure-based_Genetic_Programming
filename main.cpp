@@ -7,6 +7,7 @@
 #include <chrono>
 #include <algorithm>
 #include <numeric>
+#include <cstdlib>
 
 class Dataset {
   public:
@@ -75,35 +76,24 @@ Dataset* fetchDataset(std::string datasetName) {
   ds->data = fullDataset;
   ds->columnTypes = columnTypes;
 
-  // std::cout << "Dataset size: " << ds->data.size() << " x " << ds->data[0].size() << std::endl;
-  // std::cout << "Column names: ";
-  // std::cout << std::endl;
-  // for (const auto& name : ds->columnTypes) {
-  //   std::cout << name.first << " (" << (name.second == 0 ? "boolean" : "float") << "), " << std::endl;
-  // }
-  // std::cout << "___________________" << std::endl;
-
-  // std::cout << "Dataset '" << datasetName << "' loaded!" << std::endl;
-
   return ds;
 }
 
 void run() {
-  Dataset* dataset = fetchDataset("preprocessing/hepatitis_cleaned.tsv");
+  Dataset* dataset = fetchDataset("hepatitis_cleaned.tsv");
 
   if (!dataset) {
     std::cerr << "Failed to load datasets" << std::endl;
     return;
   }
 
-  std::ofstream file("outputs.csv", std::ios::trunc);
-  if (!file.is_open()) {
-    std::cerr << "Failed to open outputs.csv" << std::endl;
-  }
-  file << "run,generation,populationFitness,bestTree,action,structured" << std::endl;
-  file.close();
+  // std::ofstream file("outputs.csv", std::ios::trunc);
+  // if (!file.is_open()) {
+  //   std::cerr << "Failed to open outputs.csv" << std::endl;
+  // }
+  // file << "run,generation,populationFitness,bestTree,action,structured" << std::endl;
+  // file.close();
 
-  // still store column names
   std::vector<std::string> columnNames;
   for (const auto& name : dataset->columnTypes) {
     columnNames.push_back(name.first);
@@ -112,7 +102,7 @@ void run() {
   // setup for normal GP
   int populationSize = 35;
   int maxDepth = 7; // initial depth, can grow indefinitely
-  int maxGenerations = 70;
+  int maxGenerations = 80;
   std::vector<double> applicationRates = {0.6, 0.25}; // crossoverRate, mutationRate
   int tournamentSize = 7;
 
@@ -123,14 +113,13 @@ void run() {
   std::vector<double> applicationRatesStruct = {0.5, 0.25}; // crossoverRate, mutationRate
   int tournamentSizeStruct = 7;
 
-  int runs = 10;
+  int runs = 1; // only 1 run for submission purposes
   std::vector<GPStruct*> gps;
   std::vector<GPStruct*> gp_structs;
 
   gps.resize(runs);
   gp_structs.resize(runs);
 
-  // across-run-stats
   std::vector<double> bestFitness(runs);
   std::vector<double> bestFitnessStruct(runs);
   std::vector<double> avgDuration(runs);
@@ -145,6 +134,9 @@ void run() {
     gps[i]->train(i);
     bestFitness[i] = gps[i]->test(i);
     auto end = std::chrono::high_resolution_clock::now();
+
+    // reset the seed
+    std::srand(i);
     
     // structure-based GP
     auto start_struct = std::chrono::high_resolution_clock::now();
